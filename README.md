@@ -1,6 +1,21 @@
-# REM Go
+# REM From FunnelScript
 
-REM Go researches how a company acquires customers from a public website, App Store listing, or Google Play listing. Each run saves a Markdown report and a JSON evidence bundle. The CLI, local web app, and MCP server use the same collectors and run history.
+REM researches how a company acquires customers from a public website, App Store listing, or Google Play listing. Each run saves a Markdown report and a JSON evidence bundle. The CLI, local web app, and MCP server use the same collectors and run history.
+
+[![CI](https://github.com/funnelscript/rem-from-funnelscript/actions/workflows/ci.yml/badge.svg)](https://github.com/funnelscript/rem-from-funnelscript/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/funnelscript/rem-from-funnelscript)](https://github.com/funnelscript/rem-from-funnelscript/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+## Install
+
+Download the archive for your platform from [GitHub Releases](https://github.com/funnelscript/rem-from-funnelscript/releases/latest). Compare its SHA-256 hash with `SHA256SUMS`, extract it, and put `rem` or `rem.exe` on your path. The macOS archives contain unsigned binaries.
+
+With Go installed, you can build and install directly:
+
+```sh
+go install github.com/funnelscript/rem-from-funnelscript/cmd/rem@v0.1.0
+rem demo
+```
 
 ## Run it
 
@@ -64,6 +79,10 @@ Use the binary's stable absolute path. The same stdio command works with other c
 ```
 
 MCP offers investigation, evidence retrieval, content filtering, playbooks, report validation, report writing, and run comparison. Use `get_evidence` with `include_unknowns: true` to retrieve unresolved checks. The named prompts cover company investigation, comparison, monitoring, planning, and unknowns.
+
+## Contribute
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and release checks, [CHANGELOG.md](CHANGELOG.md) for changes, and [SECURITY.md](SECURITY.md) for private security reporting.
 
 ## Verify
 

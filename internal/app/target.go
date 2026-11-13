@@ -9,9 +9,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"golang.org/x/net/publicsuffix"
-	"remgo/internal/fetch"
-	"remgo/internal/model"
 )
 
 var (

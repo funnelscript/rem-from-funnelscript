@@ -1,5 +1,5 @@
-module remgo
+module github.com/funnelscript/rem-from-funnelscript
 
 go 1.26.0
 
-require golang.org/x/net v0.51.0
+require golang.org/x/net v0.62.0

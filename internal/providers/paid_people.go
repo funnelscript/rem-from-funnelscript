@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 const paidGoogleSearch = "/v1/google/search"

@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 const (

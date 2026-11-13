@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 type paidTransport func(*http.Request) (*http.Response, error)

@@ -1,7 +1,7 @@
 package store
 
 import (
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"sync"
 	"testing"
 )

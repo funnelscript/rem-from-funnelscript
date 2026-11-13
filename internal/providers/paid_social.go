@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 type paidSocialPlan struct {

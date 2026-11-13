@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"remgo/internal/collect"
-	"remgo/internal/fetch"
-	"remgo/internal/model"
-	"remgo/internal/providers"
-	"remgo/internal/report"
-	"remgo/internal/store"
+	"github.com/funnelscript/rem-from-funnelscript/internal/collect"
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/providers"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/store"
 )
 
 var Areas = []string{"website", "seo", "history", "apps", "paid", "social", "founders", "community"}

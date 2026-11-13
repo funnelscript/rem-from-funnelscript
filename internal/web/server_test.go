@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"remgo/internal/app"
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func request(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {

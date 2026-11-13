@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"remgo/internal/app"
-	"remgo/internal/model"
-	"remgo/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
 )
 
 //go:embed index.html

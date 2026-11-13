@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func TestWikidataMatchesOfficialSiteAndFollowsDeveloper(t *testing.T) {

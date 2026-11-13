@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"remgo/internal/model"
-	"remgo/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
 )
 
 const defaultAnthropic = "claude-sonnet-4-6"

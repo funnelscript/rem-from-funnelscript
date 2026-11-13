@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 //go:embed harness/*.md harness/*.json harness/playbooks/*.md

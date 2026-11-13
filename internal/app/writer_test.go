@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"io"
 	"net/http"
-	"remgo/internal/model"
 	"strings"
 	"testing"
 )

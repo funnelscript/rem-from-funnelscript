@@ -3,3 +3,7 @@
 /rem-reports/
 /dist/
 .env
+.env.*
+!.env.example
+.DS_Store
+coverage.out

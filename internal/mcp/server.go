@@ -11,9 +11,9 @@ import (
 	"sort"
 	"strings"
 
-	"remgo/internal/app"
-	"remgo/internal/model"
-	"remgo/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
 )
 
 // Serve runs the MCP server over newline-delimited JSON-RPC on stdio.

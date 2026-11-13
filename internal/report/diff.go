@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 type Metric struct {

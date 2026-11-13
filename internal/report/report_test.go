@@ -1,7 +1,7 @@
 package report
 
 import (
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"strings"
 	"testing"
 )

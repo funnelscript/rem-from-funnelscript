@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"remgo/internal/app"
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func TestInvestigationSummaryPreservesBudgetAndEvidenceProvenance(t *testing.T) {

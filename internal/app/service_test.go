@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"remgo/internal/fetch"
-	"remgo/internal/report"
-	"remgo/internal/store"
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/store"
 )
 
 type getterFunc func(context.Context, string) (fetch.Response, error)

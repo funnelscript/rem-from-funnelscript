@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"golang.org/x/net/html"
-	"remgo/internal/model"
 )
 
 type pageFacts struct {

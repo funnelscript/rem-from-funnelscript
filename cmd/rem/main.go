@@ -21,18 +21,18 @@ import (
 	"syscall"
 	"time"
 
-	"remgo/internal/app"
-	"remgo/internal/mcp"
-	"remgo/internal/model"
-	"remgo/internal/report"
-	"remgo/internal/store"
-	"remgo/internal/web"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/mcp"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/report"
+	"github.com/funnelscript/rem-from-funnelscript/internal/store"
+	"github.com/funnelscript/rem-from-funnelscript/internal/web"
 )
 
 //go:embed demo/*
 var demo embed.FS
 
-const help = `REM Go · public marketing research
+const help = `REM From FunnelScript · public marketing research
 
 Usage
   rem <domain-or-store-url> [--only website,seo] [--no-ai] [--json] [--out DIR]
@@ -204,7 +204,7 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) error {
 		if f.json {
 			return printJSON(out, doctor)
 		}
-		fmt.Fprintf(out, "REM Go %s\n\nPublic sources: %s\nScrape Creators key: %v\n", model.Version, strings.Join(doctor["freeSources"].([]string), ", "), doctor["scrapeCreators"])
+		fmt.Fprintf(out, "REM From FunnelScript %s\n\nPublic sources: %s\nScrape Creators key: %v\n", model.Version, strings.Join(doctor["freeSources"].([]string), ", "), doctor["scrapeCreators"])
 		engines := doctor["engines"].(map[string]bool)
 		for _, name := range []string{"evidence", "anthropic", "claude-code", "codex"} {
 			fmt.Fprintf(out, "  %-12s %t\n", name, engines[name])

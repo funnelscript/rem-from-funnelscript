@@ -1,0 +1,10 @@
+name: Feature request
+description: Describe a research workflow that REM could support
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Research workflow
+      description: What question do you need to answer, and which public evidence would help?
+    validations:
+      required: true

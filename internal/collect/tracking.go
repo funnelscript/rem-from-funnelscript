@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"golang.org/x/net/html"
-	"remgo/internal/fetch"
-	"remgo/internal/model"
 )
 
 type trackingTag struct {

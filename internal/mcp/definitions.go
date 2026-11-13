@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"remgo/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/app"
 )
 
 var (

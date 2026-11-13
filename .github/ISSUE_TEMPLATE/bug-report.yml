@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible problem with REM
+title: '[Bug] '
+body:
+  - type: input
+    id: version
+    attributes:
+      label: REM version and platform
+      placeholder: 0.1.0, macOS arm64
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the command or browser steps and a public target if you can share it. Remove tokens and private data.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual results
+    validations:
+      required: true

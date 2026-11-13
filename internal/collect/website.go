@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	"remgo/internal/fetch"
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func Website(ctx context.Context, get fetch.Getter, target model.Target) (model.Target, model.Discovered, model.Result) {

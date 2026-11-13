@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"remgo/internal/fetch"
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 const (

@@ -17,9 +17,9 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/publicsuffix"
 
-	"remgo/internal/collect"
-	"remgo/internal/fetch"
-	"remgo/internal/model"
+	"github.com/funnelscript/rem-from-funnelscript/internal/collect"
+	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 const (
