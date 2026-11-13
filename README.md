@@ -55,7 +55,7 @@ To compare two snapshots:
 
 Collectors label unavailable data as unknown and include manual-check links where possible. Tracking tags signal a possible channel. Ad samples and public install bands do not establish conversions, ROAS, spend, or causal impact.
 
-`--only` accepts `website,seo,history,apps,paid,social,founders,community`. The website stage always runs when a public website is available. For store input the store lookup also runs first. Use `--handle tiktok=example` to override a discovered handle. If no observations are collected, the CLI exits nonzero and retains the run's source statuses and unknowns.
+`--only` accepts `website,seo,history,apps,paid,social,founders,community`. The website stage always runs when a public website is available. For store input the store lookup also runs first. Use `--handle tiktok=example` to override a discovered handle. Default exports go to `rem-reports/<run-id>`. Pass `--out` to choose a directory. If no observations are collected, the CLI exits nonzero and retains the run's source statuses and unknowns.
 
 ### Optional providers
 

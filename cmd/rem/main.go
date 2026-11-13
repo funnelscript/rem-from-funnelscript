@@ -51,7 +51,7 @@ Investigation options
   --engine     auto,evidence,anthropic,claude-code,codex
   --model      optional model for the selected writer
   --json       JSON to stdout, with the run also saved in history
-  --out        export directory, default rem-reports/<domain>-<run-id>
+  --out        export directory, default rem-reports/<run-id>
   -q, --quiet  suppress stage progress
   --home       override the history data directory
   -v, --version
@@ -259,17 +259,7 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) error {
 		}
 		dir := f.out
 		if dir == "" {
-			label := bundle.Target.Domain
-			if label == "" {
-				label = bundle.Target.AppleID
-			}
-			if label == "" {
-				label = bundle.Target.PlayID
-			}
-			if label == "" {
-				label = "target"
-			}
-			dir = filepath.Join("rem-reports", strings.ReplaceAll(label, ":", "_")+"-"+bundle.ID)
+			dir = filepath.Join("rem-reports", bundle.ID)
 		}
 		if err = store.Export(dir, bundle, md); err != nil {
 			return fmt.Errorf("run %s saved in history, export failed: %w", bundle.ID, err)

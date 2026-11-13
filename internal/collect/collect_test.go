@@ -151,3 +151,27 @@ func TestSEOReadsCompressedSitemapWithinCollectionLimits(t *testing.T) {
 	result := SEO(context.Background(), web, model.Target{URL: base, Domain: "company.example"})
 	assertEvidenceData(t, result, "Sitemap:", `"totalUrls":1`, `"templates":1`)
 }
+
+func TestTrackingRejectsVendorDomainsInsideDifferentHostnames(t *testing.T) {
+	tags := detectTracking(`src=https://notwarmly.ai.example/mark
+src=https://js.stripe.com.example/stripe.js
+src=https://sub.analytics.tiktok.com.example/pixel
+src=https://cdn.segment.com/analytics.jsx
+src=https://js.stripe.com/v3/
+src=https://www.googletagmanager.com/gtm.js?id=GTM-HELLO
+fbq("init","1234567890");`, "page")
+	present := map[string]bool{}
+	for _, tag := range tags {
+		present[tag.ID] = true
+	}
+	for _, id := range []string{"warmly", "tiktok_pixel", "segment"} {
+		if present[id] {
+			t.Errorf("incorrect match: %s", id)
+		}
+	}
+	for _, id := range []string{"stripe", "gtm", "meta_pixel"} {
+		if !present[id] {
+			t.Errorf("missing match: %s", id)
+		}
+	}
+}
