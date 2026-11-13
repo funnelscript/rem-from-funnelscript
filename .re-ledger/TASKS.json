@@ -1,12 +1,180 @@
 {
   "tasks": [
-    {"id":"T01","outcome":"Pin baseline, characterize entry points and acceptance","depends_on":[],"owner":"coordinator","write_paths":[".re-ledger/"],"evidence_ids":["R01","R02","R03","R04"],"checks":["bun run typecheck && bun run test && bun run eval && bun run build"],"status":"done","verification":"23 upstream tests and recorded eval passed at pinned upstream revision"},
-    {"id":"T02","outcome":"Shared target, public HTTP, evidence, storage and CLI","depends_on":["T01"],"owner":"coordinator","write_paths":["cmd/rem/","internal/app/","internal/fetch/","internal/model/","internal/report/","internal/store/"],"evidence_ids":["R02","R05","R08","R10"],"checks":["go test -race ./cmd/rem ./internal/app ./internal/fetch ./internal/report ./internal/store"],"status":"done","verification":"integrated tests and Mac binary smoke, see VERIFICATION.md"},
-    {"id":"T03","outcome":"Website, tracking and SEO","depends_on":["T02"],"owner":"website","write_paths":["internal/collect/"],"evidence_ids":["R06","R11"],"checks":["go test -race ./internal/collect"],"status":"done","verification":"fixtures and live Linear run"},
-    {"id":"T04","outcome":"Store, Apple Ads, HN, Wikidata and Wayback","depends_on":["T02"],"owner":"providers","write_paths":["internal/providers/free*.go"],"evidence_ids":["R06","R12"],"checks":["go test -race ./internal/providers"],"status":"done","verification":"provider fixtures, direct provider shape checks and selected native runs"},
-    {"id":"T05","outcome":"Keyed paid, organic and community collectors with credit budget","depends_on":["T02"],"owner":"paid","write_paths":["internal/providers/paid*.go"],"evidence_ids":["R07"],"checks":["go test -race ./internal/providers -run TestPaid"],"status":"done","verification":"fixture-verified. Live authorization and billing are external"},
-    {"id":"T06","outcome":"MCP stdio tools and named prompts","depends_on":["T02"],"owner":"mcp","write_paths":["internal/mcp/"],"evidence_ids":["R02","R13"],"checks":["go test -race ./internal/mcp"],"status":"done","verification":"Go race tests and Python MCP SDK smoke"},
-    {"id":"T07","outcome":"Local browser investigation and evidence review","depends_on":["T02"],"owner":"web","write_paths":["internal/web/"],"evidence_ids":["R02","R11"],"checks":["go test -race ./internal/web"],"status":"done","verification":"HTTP contract tests and Chromium integrated smoke"},
-    {"id":"T08","outcome":"Verification, parity, and delivery","depends_on":["T03","T04","T05","T06","T07"],"owner":"coordinator","write_paths":[".re-ledger/","README.md","smoke.sh"],"evidence_ids":["R01","R05","R11","R13"],"checks":["go vet ./...","go test -race -count=1 -cover ./...","bash smoke.sh ./rem"],"status":"in_progress"}
+    {
+      "id": "T01",
+      "outcome": "Pin baseline, characterize entry points and acceptance",
+      "depends_on": [],
+      "owner": "coordinator",
+      "write_paths": [
+        ".re-ledger/"
+      ],
+      "evidence_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04"
+      ],
+      "checks": [
+        "bun run typecheck && bun run test && bun run eval && bun run build"
+      ],
+      "status": "done",
+      "verification": "23 upstream tests and recorded eval passed at pinned upstream revision"
+    },
+    {
+      "id": "T02",
+      "outcome": "Shared target, public HTTP, evidence, storage and CLI",
+      "depends_on": [
+        "T01"
+      ],
+      "owner": "coordinator",
+      "write_paths": [
+        "cmd/rem/",
+        "internal/app/",
+        "internal/fetch/",
+        "internal/model/",
+        "internal/report/",
+        "internal/store/"
+      ],
+      "evidence_ids": [
+        "R02",
+        "R05",
+        "R08",
+        "R10"
+      ],
+      "checks": [
+        "go test -race ./cmd/rem ./internal/app ./internal/fetch ./internal/report ./internal/store"
+      ],
+      "status": "done",
+      "verification": "integrated tests and Mac binary smoke, see VERIFICATION.md"
+    },
+    {
+      "id": "T03",
+      "outcome": "Website, tracking and SEO",
+      "depends_on": [
+        "T02"
+      ],
+      "owner": "website",
+      "write_paths": [
+        "internal/collect/"
+      ],
+      "evidence_ids": [
+        "R06",
+        "R11"
+      ],
+      "checks": [
+        "go test -race ./internal/collect"
+      ],
+      "status": "done",
+      "verification": "fixtures and live Linear run"
+    },
+    {
+      "id": "T04",
+      "outcome": "Store, Apple Ads, HN, Wikidata and Wayback",
+      "depends_on": [
+        "T02"
+      ],
+      "owner": "providers",
+      "write_paths": [
+        "internal/providers/free*.go"
+      ],
+      "evidence_ids": [
+        "R06",
+        "R12"
+      ],
+      "checks": [
+        "go test -race ./internal/providers"
+      ],
+      "status": "done",
+      "verification": "provider fixtures, direct provider shape checks and selected native runs"
+    },
+    {
+      "id": "T05",
+      "outcome": "Keyed paid, organic and community collectors with credit budget",
+      "depends_on": [
+        "T02"
+      ],
+      "owner": "paid",
+      "write_paths": [
+        "internal/providers/paid*.go"
+      ],
+      "evidence_ids": [
+        "R07"
+      ],
+      "checks": [
+        "go test -race ./internal/providers -run TestPaid"
+      ],
+      "status": "done",
+      "verification": "fixture-verified. Live authorization and billing are external"
+    },
+    {
+      "id": "T06",
+      "outcome": "MCP stdio tools and named prompts",
+      "depends_on": [
+        "T02"
+      ],
+      "owner": "mcp",
+      "write_paths": [
+        "internal/mcp/"
+      ],
+      "evidence_ids": [
+        "R02",
+        "R13"
+      ],
+      "checks": [
+        "go test -race ./internal/mcp"
+      ],
+      "status": "done",
+      "verification": "Go race tests and Python MCP SDK smoke"
+    },
+    {
+      "id": "T07",
+      "outcome": "Local browser investigation and evidence review",
+      "depends_on": [
+        "T02"
+      ],
+      "owner": "web",
+      "write_paths": [
+        "internal/web/"
+      ],
+      "evidence_ids": [
+        "R02",
+        "R11"
+      ],
+      "checks": [
+        "go test -race ./internal/web"
+      ],
+      "status": "done",
+      "verification": "HTTP contract tests and Chromium integrated smoke"
+    },
+    {
+      "id": "T08",
+      "outcome": "Verification, parity, and delivery",
+      "depends_on": [
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07"
+      ],
+      "owner": "coordinator",
+      "write_paths": [
+        ".re-ledger/",
+        "README.md",
+        "smoke.sh"
+      ],
+      "evidence_ids": [
+        "R01",
+        "R05",
+        "R11",
+        "R13"
+      ],
+      "checks": [
+        "go vet ./...",
+        "go test -race -count=1 -cover ./...",
+        "bash smoke.sh ./rem"
+      ],
+      "status": "done",
+      "verification": "Implementation 65ef17b1beff2ebed39d3a5275dfe41dcd7530dd. Linux and Mac race checks, native Mac CLI/MCP/browser live runs, five cross-build targets, see VERIFICATION.md."
+    }
   ]
 }
