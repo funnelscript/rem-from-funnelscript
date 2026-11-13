@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -308,7 +309,8 @@ func TestPaidCacheReusesWithinTTLWithoutCreditsAndIsolatesAccounts(t *testing.T)
 		t.Fatalf("cache file count: %v %v", files, err)
 	}
 	file := filepath.Join(dir, files[0].Name())
-	if info, err := os.Stat(file); err != nil || info.Mode().Perm()&0o077 != 0 {
+	// Windows inherits directory ACLs and Go does not expose them as POSIX permission bits.
+	if info, err := os.Stat(file); err != nil || (runtime.GOOS != "windows" && info.Mode().Perm()&0o077 != 0) {
 		t.Fatalf("cache file permissions: %v %v", info, err)
 	}
 	blob, err := os.ReadFile(file)
