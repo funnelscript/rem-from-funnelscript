@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REM · Marketing Research</title>
+  <link rel="stylesheet" href="/app.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="#/" aria-label="REM home"><span class="monogram" aria-hidden="true">R</span> REM</a>
+      <span class="divider" aria-hidden="true"></span>
+      <span class="topbar-label">Marketing Research</span>
+      <button class="status-button" id="status-button" type="button"><span class="status-dot" aria-hidden="true"></span> Sources</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section id="home">
+      <div class="intro">
+        <h1>Investigate a company’s marketing</h1>
+        <p>Start with a website or app store link. See what the public evidence says about how the company acquires customers.</p>
+      </div>
+      <form id="investigate" class="investigate-form">
+        <label for="target">Website or app store link</label>
+        <div class="entry">
+          <input id="target" name="target" placeholder="example.com" required maxlength="2048" autocomplete="off" spellcheck="false">
+          <button class="primary" id="start" type="submit">Investigate <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="form-controls">
+          <div class="engine-control">
+            <label for="engine">Report writer</label>
+            <select id="engine" name="engine"><option value="evidence">Evidence only</option></select>
+          </div>
+          <details id="advanced">
+            <summary>Run options</summary>
+            <div class="advanced-body">
+              <fieldset id="areas"><legend>Collection areas</legend></fieldset>
+              <div class="advanced-fields">
+                <label>Social handles <input id="handles" placeholder="tiktok=brand, x=brand" autocomplete="off" spellcheck="false"></label>
+                <label>Provider credit limit <input id="credits" type="number" min="0" max="500" step="1" placeholder="Default"></label>
+                <label>Report model <input id="model" placeholder="Writer default" autocomplete="off" spellcheck="false"></label>
+              </div>
+            </div>
+          </details>
+        </div>
+      </form>
+      <section class="recent" aria-labelledby="history-heading">
+        <div class="section-heading"><h2 id="history-heading">Saved investigations</h2><button class="secondary" id="refresh" type="button">Refresh</button></div>
+        <div id="history"></div>
+      </section>
+    </section>
+
+    <section id="progress" class="progress" aria-live="polite" hidden>
+      <h2 id="progress-title">Investigation in progress</h2>
+      <p id="progress-message"></p>
+      <ul id="stages" class="stages"></ul>
+      <button class="secondary" id="cancel" type="button">Cancel investigation</button>
+    </section>
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <section id="run" hidden>
+      <div class="run-top">
+        <a class="back" href="#/">← Saved investigations</a>
+        <div class="download-links"><button class="secondary" id="compare" type="button">Compare latest runs</button><button class="secondary" id="rerun" type="button">Investigate again</button></div>
+      </div>
+      <div class="run-title">
+        <div><h1 id="brand"></h1><p id="target-meta"></p></div>
+        <div class="download-links"><a class="secondary" id="markdown-link">Report .md</a><a class="secondary" id="evidence-link">Evidence .json</a></div>
+      </div>
+      <div class="metrics" id="metrics"></div>
+      <p class="notice" id="report-warning" hidden></p>
+      <nav class="tabs" id="tabs" aria-label="Investigation sections">
+        <button type="button" data-panel="overview" aria-pressed="true">Overview</button>
+        <button type="button" data-panel="report" aria-pressed="false">Report</button>
+        <button type="button" data-panel="evidence" aria-pressed="false">Evidence</button>
+        <button type="button" data-panel="content" aria-pressed="false">Ads &amp; posts</button>
+        <button type="button" data-panel="unknowns" aria-pressed="false">Unknowns</button>
+      </nav>
+      <div id="panels">
+        <section id="panel-overview">
+          <div class="section-heading"><h2>Channel signals</h2></div>
+          <div id="scorecard"></div>
+          <section id="founders-section" hidden><h2>Founders</h2><div id="founders"></div></section>
+          <section><h2>Source runs</h2><div id="source-runs"></div></section>
+        </section>
+        <article id="panel-report" class="report" hidden></article>
+        <section id="panel-evidence" hidden>
+          <div class="filterbar"><label>Find evidence <input type="search" id="evidence-search" placeholder="Title, source, or ID"></label></div>
+          <div id="evidence-list"></div>
+        </section>
+        <section id="panel-content" hidden>
+          <div class="filterbar">
+            <label>Platform <select id="platform"><option value="">All platforms</option></select></label>
+            <label>Type <select id="kind"><option value="">All types</option></select></label>
+            <label>Sort by <select id="sort-content"><option value="latest">Newest first</option><option value="views">Views</option><option value="running">Longest running</option></select></label>
+          </div>
+          <div id="content-list" class="content-grid"></div>
+        </section>
+        <section id="panel-unknowns" hidden><div id="unknown-list"></div></section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+    <div class="dialog-head"><h2 id="evidence-title">Evidence</h2><form method="dialog"><button class="secondary" type="submit">Close</button></form></div>
+    <div id="evidence-details"></div>
+  </dialog>
+  <dialog id="status-dialog" aria-labelledby="status-title">
+    <div class="dialog-head"><h2 id="status-title">Sources and report writers</h2><form method="dialog"><button class="secondary" type="submit">Close</button></form></div>
+    <div id="status-details"></div>
+  </dialog>
+  <dialog id="compare-dialog" aria-labelledby="compare-title">
+    <div class="dialog-head"><h2 id="compare-title">Changes across latest runs</h2><form method="dialog"><button class="secondary" type="submit">Close</button></form></div>
+    <div id="compare-details" aria-live="polite"></div>
+  </dialog>
+</body>
+</html>
