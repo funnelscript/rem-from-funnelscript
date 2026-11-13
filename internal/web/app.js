@@ -461,6 +461,21 @@ function displayRun(id, data) {
   const path = `/api/runs/${encodeURIComponent(id)}`;
   $("markdown-link").href = `${path}/report.md`;
   $("markdown-link").hidden = !data.report;
+  const copyBtn = $("copy-report-btn");
+  if (copyBtn) {
+    copyBtn.hidden = !data.report;
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(data.report);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+      } catch (e) {
+        copyBtn.textContent = "Copy failed";
+        setTimeout(() => { copyBtn.textContent = "Copy report"; }, 2000);
+      }
+    };
+  }
   $("evidence-link").href = `${path}/evidence.json`;
   $("metrics").replaceChildren(...[
     [current.evidence.length, "Evidence items"], [current.content.length, "Ads & posts"], [bundle.unknowns?.length || 0, "Unknowns"],

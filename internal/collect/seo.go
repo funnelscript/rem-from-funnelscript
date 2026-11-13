@@ -76,11 +76,29 @@ func SEO(ctx context.Context, get fetch.Getter, target model.Target) model.Resul
 	if llmsProblem != "" {
 		result.Unknowns = append(result.Unknowns, unknown("geo", "llms.txt: "+llmsProblem, llmsURL))
 	}
+	// llms.txt access policy: check whether the file allows or restricts LLM access.
+	var llmsAllows *bool
+	if llmsStatus == "present" && llmsText != "" {
+		lower := strings.ToLower(llmsText)
+		denies := strings.Contains(lower, "disallow") || strings.Contains(lower, "noai") ||
+			strings.Contains(lower, "no-ai") || strings.Contains(lower, "forbid") ||
+			strings.Contains(lower, "not permitted") || strings.Contains(lower, "prohibited")
+		grants := strings.Contains(lower, "allow") || strings.Contains(lower, "permitted") ||
+			strings.Contains(lower, "welcome") || strings.Contains(lower, "encouraged")
+		v := grants && !denies
+		llmsAllows = &v
+	}
 	if robotsStatus != "unavailable" || llmsStatus != "unavailable" {
 		var stance []string
 		switch llmsStatus {
 		case "present":
-			stance = append(stance, "has llms.txt")
+			if llmsAllows != nil && !*llmsAllows {
+				stance = append(stance, "has llms.txt (restricts LLMs)")
+			} else if llmsAllows != nil && *llmsAllows {
+				stance = append(stance, "has llms.txt (allows LLMs)")
+			} else {
+				stance = append(stance, "has llms.txt")
+			}
 		case "absent":
 			stance = append(stance, "llms.txt absent")
 		default:
@@ -100,7 +118,7 @@ func SEO(ctx context.Context, get fetch.Getter, target model.Target) model.Resul
 			sourceURL = llmsURL
 		}
 		result.Evidence = append(result.Evidence, evidence("seo", "observation", "AI-search stance: "+strings.Join(stance, ", "), sourceURL, map[string]any{
-			"robots": robots, "robotsStatus": robotsStatus, "robotsURL": robotsURL, "llmsTxt": llmsText, "llmsStatus": llmsStatus, "llmsURL": llmsURL,
+			"robots": robots, "robotsStatus": robotsStatus, "robotsURL": robotsURL, "llmsTxt": llmsText, "llmsStatus": llmsStatus, "llmsURL": llmsURL, "llmsAllowsLLMs": llmsAllows,
 		}))
 	}
 	collectSitemaps(ctx, get, base, robots, &result)

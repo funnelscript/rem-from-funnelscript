@@ -22,11 +22,22 @@ rem demo
 From the source directory with Go 1.26 or later:
 
 ```sh
-go build -trimpath -o rem ./cmd/rem
+make build   # or: go build -trimpath -o rem ./cmd/rem
 ./rem doctor
 ./rem linear.app --only website,seo --no-ai --out ./rem-reports/linear
 ./rem validate ./rem-reports/linear/evidence.json ./rem-reports/linear/report.md
 ./rem web
+```
+
+### Build & test automation
+
+```sh
+make build    # Build optimized binary with -trimpath and -ldflags="-s -w"
+make test     # Run full test suite with race detector (-race)
+make lint     # Run go vet ./...
+make smoke    # Run end-to-end smoke test on linear.app (or $REM_LIVE_TARGET)
+make install  # Install binary to $(GOPATH)/bin/rem
+make cross    # Cross-compile for linux/amd64 and darwin/arm64 into dist/
 ```
 
 `./rem demo` opens a recorded Cal AI investigation with no requests to source providers. Use `--no-open --port 0` to print a dynamically allocated loopback URL without launching a browser. Choose **Evidence only** in the browser to collect and view reports without a model.
