@@ -53,7 +53,9 @@ func (s *Service) Doctor() map[string]any {
 		"version":        model.Version,
 		"scrapeCreators": env("SCRAPECREATORS_API_KEY", "SCRAPE_CREATORS_API_KEY") != "",
 		"engines":        map[string]bool{"evidence": true, "anthropic": env("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN") != "", "claude-code": claudeErr == nil, "codex": codexErr == nil},
-		"freeSources":    []string{"website", "tracking", "seo", "wayback", "appstore", "apple_ads", "hackernews", "founders"},
+		"freeSources":    []string{"website", "tracking", "seo", "wayback", "appstore", "apple_ads", "hackernews", "reddit_public", "github_public", "founders", "careers_hiring"},
+		"stealth":        env("REM_STEALTH") == "1",
+		"keyless":        env("REM_KEYLESS") == "1",
 	}
 }
 
@@ -99,8 +101,13 @@ func (s *Service) Investigate(ctx context.Context, input string, opts Options) (
 		Sources: []model.SourceRun{}, Content: []model.Content{},
 	}
 	discovered := model.Discovered{Socials: map[string]string{}}
+	if client, ok := s.get.(*fetch.Client); ok && (opts.Stealth || env("REM_STEALTH") == "1") {
+		client.SetStealth(true)
+	}
 	maxCredits := opts.MaxCredits
-	if !opts.BudgetSet && maxCredits == 0 {
+	if opts.Keyless || env("REM_KEYLESS") == "1" {
+		maxCredits = 0
+	} else if !opts.BudgetSet && maxCredits == 0 {
 		maxCredits = 50
 	}
 	paid := providers.NewPaid(s.http, env("SCRAPECREATORS_API_KEY", "SCRAPE_CREATORS_API_KEY"), maxCredits)
@@ -186,7 +193,9 @@ func (s *Service) Investigate(ctx context.Context, input string, opts Options) (
 		{"seo", "seo", func() model.Result { return collect.SEO(ctx, s.get, target) }},
 		{"history", "wayback", func() model.Result { return providers.History(ctx, s.get, target) }},
 		{"apps", "apple_ads", func() model.Result { return providers.AppleAds(ctx, s.get, target, discovered) }},
-		{"apps", "hackernews", func() model.Result { return providers.Community(ctx, s.get, target) }},
+		{"community", "hackernews", func() model.Result { return providers.Community(ctx, s.get, target) }},
+		{"community", "reddit", func() model.Result { return providers.RedditPublic(ctx, s.get, target) }},
+		{"community", "github", func() model.Result { return providers.GitHubPublic(ctx, s.get, target, discovered) }},
 	}
 	if !storeTarget && wanted("apps") {
 		appendStage(run("appstore", func() model.Result {
@@ -198,7 +207,11 @@ func (s *Service) Investigate(ctx context.Context, input string, opts Options) (
 	slots := make([]stageResult, len(jobs))
 	var wg sync.WaitGroup
 	for i, j := range jobs {
-		if wanted(j.area) && (target.URL != "" || j.name == "apple_ads") {
+		runJob := wanted(j.area)
+		if j.name == "hackernews" && wanted("apps") {
+			runJob = true
+		}
+		if runJob && (target.URL != "" || j.name == "apple_ads") {
 			wg.Go(func() { slots[i] = run(j.name, j.call) })
 		}
 	}

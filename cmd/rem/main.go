@@ -45,24 +45,27 @@ Usage
   rem setup [--dry-run] [--yes] [--client claude_code,codex] [--json]
 
 Investigation options
-  --only       website,seo,history,apps,paid,social,founders,community
-  --handle     repeatable platform=name override
+  --only        website,seo,history,apps,paid,social,founders,community
+  --handle      repeatable platform=name override
   --max-credits per-run paid-provider cap, 0 to disable, default 50
-  --engine     auto,evidence,anthropic,claude-code,codex
-  --model      optional model for the selected writer
-  --json       JSON to stdout, with the run also saved in history
-  --out        export directory, default rem-reports/<run-id>
-  -q, --quiet  suppress stage progress
-  --home       override the history data directory
+  --keyless     use zero-cost extractors only (no paid API credits)
+  --stealth     use Scrapling-style browser TLS/HTTP-2 fingerprinting & anti-bot bypass
+  --window      recency filter window (e.g. 30d, 90d, 1y; default: 30d)
+  --engine      auto,evidence,anthropic,claude-code,codex
+  --model       optional model for the selected writer
+  --json        JSON to stdout, with the run also saved in history
+  --out         export directory, default rem-reports/<run-id>
+  -q, --quiet   suppress stage progress
+  --home        override the history data directory
   -v, --version
 `
 
 type flags struct {
-	help, version, noAI, json, quiet, noOpen, yes, dryRun bool
-	out, only, engine, model, home, clients               string
-	port, credits                                         int
-	budgetSet                                             bool
-	handles                                               map[string]string
+	help, version, noAI, json, quiet, noOpen, yes, dryRun, stealth, keyless bool
+	out, only, engine, model, home, clients, window                         string
+	port, credits                                                           int
+	budgetSet                                                               bool
+	handles                                                                 map[string]string
 }
 
 func parse(args []string) (flags, []string, error) {
@@ -73,8 +76,16 @@ func parse(args []string) (flags, []string, error) {
 		}
 	}
 	var rest []string
-	bools := map[string]*bool{"--help": &f.help, "-h": &f.help, "--version": &f.version, "-v": &f.version, "--no-ai": &f.noAI, "--json": &f.json, "--quiet": &f.quiet, "-q": &f.quiet, "--no-open": &f.noOpen, "--yes": &f.yes, "--dry-run": &f.dryRun}
-	stringsByName := map[string]*string{"--out": &f.out, "--only": &f.only, "--engine": &f.engine, "--model": &f.model, "--home": &f.home, "--client": &f.clients}
+	bools := map[string]*bool{
+		"--help": &f.help, "-h": &f.help, "--version": &f.version, "-v": &f.version,
+		"--no-ai": &f.noAI, "--json": &f.json, "--quiet": &f.quiet, "-q": &f.quiet,
+		"--no-open": &f.noOpen, "--yes": &f.yes, "--dry-run": &f.dryRun,
+		"--stealth": &f.stealth, "--keyless": &f.keyless,
+	}
+	stringsByName := map[string]*string{
+		"--out": &f.out, "--only": &f.only, "--engine": &f.engine, "--model": &f.model,
+		"--home": &f.home, "--client": &f.clients, "--window": &f.window,
+	}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		if a == "--" {
@@ -223,7 +234,10 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) error {
 	if len(args) != 0 {
 		return errors.New("pass one website or app store URL")
 	}
-	opts := app.Options{Handles: f.handles, MaxCredits: f.credits, BudgetSet: f.budgetSet, Engine: f.engine, Model: f.model}
+	opts := app.Options{
+		Handles: f.handles, MaxCredits: f.credits, BudgetSet: f.budgetSet, Engine: f.engine, Model: f.model,
+		Stealth: f.stealth, Keyless: f.keyless, Window: f.window,
+	}
 	if !opts.BudgetSet {
 		if value := os.Getenv("REM_MAX_CREDITS"); value != "" {
 			opts.MaxCredits, err = strconv.Atoi(value)

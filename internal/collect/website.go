@@ -90,7 +90,7 @@ func Website(ctx context.Context, get fetch.Getter, target model.Target) (model.
 		response fetch.Response
 		err      error
 	}
-	kinds := [...]string{"pricing", "about", "affiliate", "demo"}
+	kinds := [...]string{"pricing", "about", "affiliate", "demo", "careers", "customers"}
 	checked := make([]keyPageResult, len(kinds))
 	var pending sync.WaitGroup
 	for index, kind := range kinds {
@@ -135,6 +135,18 @@ func Website(ctx context.Context, get fetch.Getter, target model.Target) (model.
 			result.Evidence = append(result.Evidence, evidence("website", "observation", "Affiliate / partner program page exists", resolved.String(), data))
 		case "demo":
 			result.Evidence = append(result.Evidence, evidence("website", "observation", "Demo / contact-sales page exists", resolved.String(), data))
+		case "careers":
+			data["excerpt"] = clip(page.Text, 1200)
+			matchedRoles := growthRolePattern.FindAllString(page.Text, 20)
+			if len(matchedRoles) > 0 {
+				data["growthRoles"] = matchedRoles
+				result.Evidence = append(result.Evidence, evidence("website", "observation", fmt.Sprintf("Hiring signals: %d marketing/growth roles on careers page", len(matchedRoles)), resolved.String(), data))
+			} else {
+				result.Evidence = append(result.Evidence, evidence("website", "observation", "Careers page exists (no active growth roles detected)", resolved.String(), data))
+			}
+		case "customers":
+			data["excerpt"] = clip(page.Text, 1000)
+			result.Evidence = append(result.Evidence, evidence("website", "observation", "Customer stories and social proof on /customers", resolved.String(), data))
 		}
 	}
 	pricing := pricingSignals(pricingText)
@@ -297,16 +309,23 @@ func campaignLinks(links []*url.URL) []map[string]string {
 	return tags
 }
 
-var pricingPatterns = map[string]*regexp.Regexp{
-	"freePlan":       regexp.MustCompile(`(?i)\bfree (?:plan|forever|tier)\b|\$0\b`),
-	"freeTrial":      regexp.MustCompile(`(?i)\bfree trial\b|try (?:it )?free|start free`),
-	"moneyBack":      regexp.MustCompile(`(?i)money[- ]back|refund guarantee`),
-	"contactSales":   regexp.MustCompile(`(?i)contact sales|talk to sales|book a demo|get a demo|request a demo`),
-	"perSeat":        regexp.MustCompile(`(?i)per (?:user|seat|member)|/\s?(?:user|seat)`),
-	"annualDiscount": regexp.MustCompile(`(?i)billed annually|save \d{1,2}%|annual(?:ly)? .{0,20}(?:save|off|discount)`),
-	"lifetimeDeal":   regexp.MustCompile(`(?i)lifetime (?:deal|access|plan)|one[- ]time payment|pay once`),
-	"usageBased":     regexp.MustCompile(`(?i)pay as you go|usage[- ]based|per (?:credit|request|minute|token|call)`),
-}
+var (
+	pricingPatterns = map[string]*regexp.Regexp{
+		"freePlan":           regexp.MustCompile(`(?i)\bfree (?:plan|forever|tier)\b|\$0\b`),
+		"freeTrial":          regexp.MustCompile(`(?i)\bfree trial\b|try (?:it )?free|start free`),
+		"moneyBack":          regexp.MustCompile(`(?i)money[- ]back|refund guarantee`),
+		"contactSales":       regexp.MustCompile(`(?i)contact sales|talk to sales|book a demo|get a demo|request a demo`),
+		"perSeat":            regexp.MustCompile(`(?i)per (?:user|seat|member)|/\s?(?:user|seat)`),
+		"annualDiscount":     regexp.MustCompile(`(?i)billed annually|save \d{1,2}%|annual(?:ly)? .{0,20}(?:save|off|discount)`),
+		"lifetimeDeal":       regexp.MustCompile(`(?i)lifetime (?:deal|access|plan)|one[- ]time payment|pay once`),
+		"usageBased":         regexp.MustCompile(`(?i)pay as you go|usage[- ]based|per (?:credit|request|minute|token|call)`),
+		"noCreditCard":       regexp.MustCompile(`(?i)no credit card (?:required|needed)`),
+		"cancelAnytime":      regexp.MustCompile(`(?i)cancel (?:at )?anytime`),
+		"soc2Certified":      regexp.MustCompile(`(?i)\bsoc[- ]?2\b`),
+		"enterpriseSecurity": regexp.MustCompile(`(?i)\b(?:iso[- ]?27001|gdpr|hipaa|sso|saml)\b`),
+	}
+	growthRolePattern = regexp.MustCompile(`(?i)\b(?:growth marketer|growth marketing|head of growth|performance marketing|paid media|seo specialist|seo manager|demand generation|lifecycle marketer|content marketing manager|cro specialist)\b`)
+)
 
 func pricingSignals(text string) map[string]any {
 	prices := make([]string, 0)
@@ -347,6 +366,15 @@ func pricingLabel(signals map[string]any) string {
 	}
 	if signals["lifetimeDeal"] == true {
 		summary = append(summary, "one-time payment")
+	}
+	if signals["noCreditCard"] == true {
+		summary = append(summary, "no credit card required")
+	}
+	if signals["moneyBack"] == true {
+		summary = append(summary, "money-back guarantee")
+	}
+	if signals["annualDiscount"] == true {
+		summary = append(summary, "annual discount")
 	}
 	if signals["contactSales"] == true {
 		summary = append(summary, "sales-assisted CTA")

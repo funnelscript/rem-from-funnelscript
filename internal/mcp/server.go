@@ -122,6 +122,9 @@ func (m marketing) investigate(ctx context.Context, raw json.RawMessage) (string
 		Only       []string          `json:"only"`
 		Handles    map[string]string `json:"handles"`
 		MaxCredits *int              `json:"max_credits"`
+		Stealth    *bool             `json:"stealth"`
+		Keyless    *bool             `json:"keyless"`
+		Window     string            `json:"window"`
 	}
 	if err := decodeObject(raw, &args); err != nil {
 		return "", err
@@ -134,7 +137,13 @@ func (m marketing) investigate(ctx context.Context, raw json.RawMessage) (string
 			return "", fmt.Errorf("unknown area %q", area)
 		}
 	}
-	opts := app.Options{Only: args.Only, Handles: args.Handles, Engine: "evidence"}
+	opts := app.Options{Only: args.Only, Handles: args.Handles, Engine: "evidence", Window: args.Window}
+	if args.Stealth != nil && *args.Stealth {
+		opts.Stealth = true
+	}
+	if args.Keyless != nil && *args.Keyless {
+		opts.Keyless = true
+	}
 	if args.MaxCredits != nil {
 		if *args.MaxCredits < 0 || *args.MaxCredits > 500 {
 			return "", errors.New("max_credits must be between 0 and 500")

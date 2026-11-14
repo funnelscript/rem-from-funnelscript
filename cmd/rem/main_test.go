@@ -27,3 +27,11 @@ func TestOptionsBeforeOrAfterTarget(t *testing.T) {
 		}
 	}
 }
+
+func TestNewFlagsParsed(t *testing.T) {
+	args := []string{"example.org", "--stealth", "--keyless", "--window=90d"}
+	f, rest, err := parse(args)
+	if err != nil || len(rest) != 1 || rest[0] != "example.org" || !f.stealth || !f.keyless || f.window != "90d" {
+		t.Fatalf("unexpected flags: %+v rest=%v err=%v", f, rest, err)
+	}
+}

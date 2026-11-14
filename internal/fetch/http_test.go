@@ -42,3 +42,24 @@ func TestBodyBoundAndRetry(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestStealthHeaders(t *testing.T) {
+	var gotUA, gotSecUA, gotReferer string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		gotSecUA = r.Header.Get("Sec-CH-UA")
+		gotReferer = r.Header.Get("Referer")
+		fmt.Fprint(w, "ok")
+	}))
+	defer server.Close()
+
+	c := &Client{HTTP: server.Client(), allowTest: true}
+	c.SetStealth(true)
+	if _, err := c.Get(context.Background(), server.URL); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(gotUA, "Chrome/") || !strings.Contains(gotSecUA, "Google Chrome") {
+		t.Errorf("expected stealth chrome headers, got UA=%q SecUA=%q", gotUA, gotSecUA)
+	}
+	_ = gotReferer
+}
