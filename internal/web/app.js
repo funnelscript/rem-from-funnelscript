@@ -8,6 +8,8 @@ const labels = {
   geo: "AI search", paid_meta: "Meta ads", paid_apple: "Apple ads", paid_google: "Google ads",
   paid_linkedin: "LinkedIn ads", paid_tiktok: "TikTok ads", paid_reddit: "Reddit ads",
   appstore: "App Store", playstore: "Google Play", llms: "LLMs.txt",
+  open_source: "Open Source / Developer", reddit_marketing: "Reddit Community",
+  github: "GitHub Public", reddit: "Reddit Public",
 };
 const defaultAreas = ["website", "seo", "history", "apps", "paid", "social", "founders", "community"];
 const panels = ["overview", "report", "evidence", "content", "unknowns"];
@@ -155,6 +157,10 @@ async function begin(event) {
   if (credits !== "") body.maxCredits = Number(credits);
   const model = $("model").value.trim();
   if (model && body.engine !== "evidence") body.model = model;
+  if ($("stealth") && $("stealth").checked) body.stealth = true;
+  if ($("keyless") && $("keyless").checked) body.keyless = true;
+  const windowVal = $("window") && $("window").value.trim();
+  if (windowVal) body.window = windowVal;
   try {
     body.handles = getHandles($("handles").value);
     $("start").disabled = true;

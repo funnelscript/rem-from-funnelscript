@@ -56,6 +56,8 @@ fieldset legend { padding: 0 0 5px; }
 fieldset label { display: inline-flex; align-items: center; gap: 3px; }
 fieldset input { min-height: auto; accent-color: var(--green); }
 .advanced-fields { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.advanced-fields .checkbox-label { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
+.advanced-fields .checkbox-label input { width: auto; min-height: auto; margin: 0; accent-color: var(--green); }
 .advanced-fields input, .filterbar input, .filterbar select { display: block; margin-top: 3px; width: 100%; }
 .recent { margin-top: clamp(36px, 6vw, 72px); }
 .section-heading, .dialog-head, .run-top, .run-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
