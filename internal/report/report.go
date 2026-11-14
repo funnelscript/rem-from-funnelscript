@@ -313,6 +313,50 @@ func Markdown(b model.Bundle) string {
 	for _, c := range b.Scorecard {
 		fmt.Fprintf(&w, "| %s | %s | %s | %s |\n", Clean(strings.ReplaceAll(c.Channel, "_", " ")), Clean(c.Status), Clean(c.Signal), references(c.EvidenceIDs))
 	}
+
+	ent := b.Entrepreneur
+	if len(ent.TopGrievances) == 0 && len(ent.CreativeAngles) == 0 && len(ent.Displacement) == 0 {
+		ent = AnalyzeEntrepreneur(b)
+	}
+
+	if len(ent.CreativeAngles) > 0 {
+		w.WriteString("\n## Creative angles & ad deconstruction (REA)\n\n| Category | Hook | Mechanism | Proof & CTA | Format | Evidence |\n|---|---|---|---|---|---|\n")
+		for _, a := range ent.CreativeAngles {
+			proofCTA := strings.TrimSpace(a.Proof + " " + a.OfferCTA)
+			if proofCTA == "" {
+				proofCTA = "—"
+			}
+			fmt.Fprintf(&w, "| %s | %s | %s | %s | %s | %s |\n",
+				Clean(a.Category), Clean(a.Hook), Clean(a.Mechanism), Clean(proofCTA), Clean(a.Format), references(a.EvidenceIDs))
+		}
+	}
+
+	if len(ent.TopGrievances) > 0 || len(ent.Displacement) > 0 {
+		w.WriteString("\n## Day-1 Displacement Playbook (Replica-Entrepreneur)\n\n")
+		if len(ent.TopGrievances) > 0 {
+			w.WriteString("### Competitor grievances & flaws\n\n| Grievance Theme | Severity | Verbatim Customer Quote | Sources | Evidence |\n|---|---|---|---|---|\n")
+			for _, g := range ent.TopGrievances {
+				quote := "—"
+				if len(g.SampleQuotes) > 0 {
+					quote = g.SampleQuotes[0]
+				}
+				sourcesStr := strings.Join(g.Sources, ", ")
+				if sourcesStr == "" {
+					sourcesStr = "public_web"
+				}
+				fmt.Fprintf(&w, "| %s | %.2f | %s | %s | %s |\n",
+					Clean(g.Theme), g.Score, Clean(quote), Clean(sourcesStr), references(g.EvidenceIDs))
+			}
+		}
+
+		if len(ent.Displacement) > 0 {
+			w.WriteString("\n### Challenger brand counter-marketing plays\n\n| Target Flaw | Challenger Counter-Hook | Angle & Copy Script | Recommended CTA | Impact ROI | Evidence |\n|---|---|---|---|---|---|\n")
+			for _, p := range ent.Displacement {
+				fmt.Fprintf(&w, "| %s | %s | %s | %s | %s | %s |\n",
+					Clean(p.TargetWeakness), Clean(p.CounterHook), Clean(p.AnglePlaybook), Clean(p.RecommendedCTA), Clean(p.ImpactROI), references(p.EvidenceIDs))
+			}
+		}
+	}
 	w.WriteString("\n## Evidence\n\n")
 	for _, e := range b.Evidence {
 		fmt.Fprintf(&w, "- [%s] %s · %s", e.ID, Clean(e.Title), Clean(e.Kind))

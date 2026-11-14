@@ -483,9 +483,18 @@ function displayRun(id, data) {
     };
   }
   $("evidence-link").href = `${path}/evidence.json`;
-  $("metrics").replaceChildren(...[
-    [current.evidence.length, "Evidence items"], [current.content.length, "Ads & posts"], [bundle.unknowns?.length || 0, "Unknowns"],
-  ].map(([number, name]) => {
+  const metricCards = [
+    [current.evidence.length, "Evidence items"],
+    [current.content.length, "Ads & posts"],
+    [bundle.unknowns?.length || 0, "Unknowns"],
+  ];
+  if (bundle.entrepreneur?.creativeAngles?.length) {
+    metricCards.push([bundle.entrepreneur.creativeAngles.length, "Creative angles"]);
+  }
+  if (bundle.entrepreneur?.displacement?.length) {
+    metricCards.push([bundle.entrepreneur.displacement.length, "Displacement plays"]);
+  }
+  $("metrics").replaceChildren(...metricCards.map(([number, name]) => {
     const metric = el("div", null, "metric");
     metric.append(el("strong", number), el("span", name));
     return metric;

@@ -53,7 +53,7 @@ func (s *Service) Doctor() map[string]any {
 		"version":        model.Version,
 		"scrapeCreators": env("SCRAPECREATORS_API_KEY", "SCRAPE_CREATORS_API_KEY") != "",
 		"engines":        map[string]bool{"evidence": true, "anthropic": env("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN") != "", "claude-code": claudeErr == nil, "codex": codexErr == nil},
-		"freeSources":    []string{"website", "tracking", "seo", "wayback", "appstore", "apple_ads", "hackernews", "reddit_public", "github_public", "founders", "careers_hiring"},
+		"freeSources":    []string{"website", "tracking", "seo", "wayback", "appstore", "apple_ads", "hackernews", "reddit_public", "github_public", "founders", "careers_hiring", "creative_angles", "entrepreneur_grievances"},
 		"stealth":        env("REM_STEALTH") == "1",
 		"keyless":        env("REM_KEYLESS") == "1",
 	}
@@ -247,6 +247,7 @@ func (s *Service) Investigate(ctx context.Context, input string, opts Options) (
 		b.Identity.Logo = discovered.Logos[0].URL
 	}
 	b.Scorecard = report.Score(b)
+	b.Entrepreneur = report.AnalyzeEntrepreneur(b)
 	progress("report", "start")
 	md, err := s.WriteReport(ctx, b, opts.Engine, opts.Model)
 	if err != nil {
