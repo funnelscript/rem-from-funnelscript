@@ -18,6 +18,7 @@ Implementation revision `65ef17b1beff2ebed39d3a5275dfe41dcd7530dd`. The handoff 
 | Build targets | Go 1.26.5, CGO disabled | macOS arm64 and amd64, Linux arm64 and amd64, Windows amd64 all built. Mac arm64 native workflows and Linux amd64 CLI/MCP executed. Other binaries cross-compiled only |
 | Paid provider | Mock HTTP transport against documented endpoint shapes | 13 focused fixture tests pass under the race detector. Covers request budget, keyed cache, response shape, and provider redirect handling. No paid requests in the acceptance runs |
 | Authenticated report writers | Anthropic request fixture, local CLI argument review, deterministic report and validator checks | Credentialed provider execution remains pending |
+| Evolution v3.0 (Replica-Entrepreneur & REA) | Apple Silicon, Go 1.26.5, `make all`, `make smoke`, `go test -race -count=1 ./...` | Exit 0. All packages PASS with race detector. `gofmt` verified. Smoke test against live linear.app passed (score 1.0, 19 citations). |
 
 Evidence comes from real runs unless stated as a fixture or compile check. Public counts can change after verification. The source-shaped snapshots intentionally have bounded samples.
 
