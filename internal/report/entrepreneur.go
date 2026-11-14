@@ -16,11 +16,11 @@ var (
 	grievanceKeywords = regexp.MustCompile(`(?i)\b(slow|lag|bloat|crash|freez|expensive|price hike|pricing increase|paywall|forced|complicated|clunky|unusable|confus|broken|sync fail|data loss|buggy|bad support|awful|switched to|deal breaker|worst)\b`)
 
 	themePatterns = map[string]*regexp.Regexp{
-		"Performance & Speed":           regexp.MustCompile(`(?i)\b(slow|lag|bloat|crash|freez|heavy|loading|sluggish)\b`),
-		"Pricing & Monetization":        regexp.MustCompile(`(?i)\b(expensive|price|pricing|paywall|per seat|forced upgrade|billing|cost)\b`),
-		"Complexity & Clunky UI":        regexp.MustCompile(`(?i)\b(complicated|clunky|unusable|confus|steep learning|mess|chaos|bloated)\b`),
-		"Sync & Integration Stability":  regexp.MustCompile(`(?i)\b(sync|integration|api|rate limit|disconnected|data loss|webhook|broken)\b`),
-		"Support & Developer Trust":     regexp.MustCompile(`(?i)\b(support|service|response|ignored|awful|deal breaker|cancelled|left)\b`),
+		"Performance & Speed":          regexp.MustCompile(`(?i)\b(slow|lag|bloat|crash|freez|heavy|loading|sluggish)\b`),
+		"Pricing & Monetization":       regexp.MustCompile(`(?i)\b(expensive|price|pricing|paywall|per seat|forced upgrade|billing|cost)\b`),
+		"Complexity & Clunky UI":       regexp.MustCompile(`(?i)\b(complicated|clunky|unusable|confus|steep learning|mess|chaos|bloated)\b`),
+		"Sync & Integration Stability": regexp.MustCompile(`(?i)\b(sync|integration|api|rate limit|disconnected|data loss|webhook|broken)\b`),
+		"Support & Developer Trust":    regexp.MustCompile(`(?i)\b(support|service|response|ignored|awful|deal breaker|cancelled|left)\b`),
 	}
 )
 
