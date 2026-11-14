@@ -1,9 +1,53 @@
+# Binaries and build artifacts
 /rem
 /rem.exe
-/rem-reports/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
 /dist/
+
+# Test artifacts and performance profiles
+coverage.out
+coverage.html
+*.pprof
+
+# Investigation output directories & local reports
+/rem-reports/
+/runs/
+.rem-home/
+*.log
+
+# Sensitive environments, credentials and tokens
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.cert
+*.p12
+
+# OS files
 .DS_Store
-coverage.out
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Temporary and transfer directories
+tmp/
+temp/
+.scratch/
+.rem-go-transfer.*/
