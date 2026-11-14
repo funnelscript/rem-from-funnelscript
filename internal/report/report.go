@@ -63,8 +63,8 @@ var rules = []rule{
 	{"paid_meta", "meta_ads"}, {"paid_google", "google_ads"}, {"paid_linkedin", "linkedin_ads"}, {"paid_reddit", "reddit_ads"},
 	{"paid_tiktok", "tiktok_ads"}, {"paid_apple", "apple_ads"}, {"organic_tiktok", "tiktok"}, {"organic_instagram", "instagram"},
 	{"organic_youtube", "youtube"}, {"organic_x", "x"}, {"organic_linkedin", "linkedin"}, {"seo", "seo"}, {"geo", "seo"},
-	{"founder_led", "founders"}, {"reddit_marketing", "reddit"}, {"community", "reddit"}, {"launches", "hackernews"},
-	{"app_store", "appstore"}, {"lifecycle", "tracking"}, {"affiliate", "website"}, {"sales_led", "website"},
+	{"founder_led", "founders"}, {"reddit_marketing", "reddit"}, {"community", "hackernews"}, {"launches", "hackernews"},
+	{"open_source", "github"}, {"app_store", "appstore"}, {"lifecycle", "tracking"}, {"affiliate", "website"}, {"sales_led", "website"},
 }
 
 func Score(b model.Bundle) []model.ChannelScore {
@@ -78,7 +78,19 @@ func Score(b model.Bundle) []model.ChannelScore {
 			}
 		}
 		for _, e := range b.Evidence {
-			if e.Source != r.source && !(r.channel == "founder_led" && e.Source == "wikidata" && len(dataSlice(dataMap(e.Data)["founders"])) > 0) {
+			matchSource := e.Source == r.source
+			if !matchSource {
+				if r.channel == "founder_led" && e.Source == "wikidata" && len(dataSlice(dataMap(e.Data)["founders"])) > 0 {
+					matchSource = true
+				} else if (r.channel == "community" || r.channel == "reddit_marketing") && (e.Source == "reddit" || e.Source == "hackernews" || e.Source == "github") {
+					matchSource = true
+				} else if r.channel == "launches" && (e.Source == "hackernews" || e.Source == "github") {
+					matchSource = true
+				} else if r.channel == "open_source" && e.Source == "github" {
+					matchSource = true
+				}
+			}
+			if !matchSource {
 				continue
 			}
 			status, strength := classify(r.channel, e)
@@ -166,6 +178,24 @@ func classify(channel string, e model.Evidence) (string, int) {
 				}
 				return "likely", strength(n)
 			}
+		}
+	}
+	if channel == "open_source" {
+		if e.Source != "github" {
+			return "", 0
+		}
+		if stars, ok := number(d["stars"]); ok && stars > 0 {
+			return "active", strength(stars)
+		}
+		return "likely", 1
+	}
+	if (channel == "reddit_marketing" || channel == "community") && e.Source == "reddit" {
+		if n, ok := number(d["matchedThreads"]); ok {
+			if n == 0 {
+				return "none", 0
+			}
+			score, _ := number(d["totalScore"])
+			return "active", strength(score)
 		}
 	}
 	if n, ok := number(d["matchedThreads"]); ok && n == 0 {
@@ -283,6 +313,50 @@ func Markdown(b model.Bundle) string {
 	for _, c := range b.Scorecard {
 		fmt.Fprintf(&w, "| %s | %s | %s | %s |\n", Clean(strings.ReplaceAll(c.Channel, "_", " ")), Clean(c.Status), Clean(c.Signal), references(c.EvidenceIDs))
 	}
+
+	ent := b.Entrepreneur
+	if len(ent.TopGrievances) == 0 && len(ent.CreativeAngles) == 0 && len(ent.Displacement) == 0 {
+		ent = AnalyzeEntrepreneur(b)
+	}
+
+	if len(ent.CreativeAngles) > 0 {
+		w.WriteString("\n## Creative angles & ad deconstruction (REA)\n\n| Category | Hook | Mechanism | Proof & CTA | Format | Evidence |\n|---|---|---|---|---|---|\n")
+		for _, a := range ent.CreativeAngles {
+			proofCTA := strings.TrimSpace(a.Proof + " " + a.OfferCTA)
+			if proofCTA == "" {
+				proofCTA = "—"
+			}
+			fmt.Fprintf(&w, "| %s | %s | %s | %s | %s | %s |\n",
+				Clean(a.Category), Clean(a.Hook), Clean(a.Mechanism), Clean(proofCTA), Clean(a.Format), references(a.EvidenceIDs))
+		}
+	}
+
+	if len(ent.TopGrievances) > 0 || len(ent.Displacement) > 0 {
+		w.WriteString("\n## Day-1 Displacement Playbook (Replica-Entrepreneur)\n\n")
+		if len(ent.TopGrievances) > 0 {
+			w.WriteString("### Competitor grievances & flaws\n\n| Grievance Theme | Severity | Verbatim Customer Quote | Sources | Evidence |\n|---|---|---|---|---|\n")
+			for _, g := range ent.TopGrievances {
+				quote := "—"
+				if len(g.SampleQuotes) > 0 {
+					quote = g.SampleQuotes[0]
+				}
+				sourcesStr := strings.Join(g.Sources, ", ")
+				if sourcesStr == "" {
+					sourcesStr = "public_web"
+				}
+				fmt.Fprintf(&w, "| %s | %.2f | %s | %s | %s |\n",
+					Clean(g.Theme), g.Score, Clean(quote), Clean(sourcesStr), references(g.EvidenceIDs))
+			}
+		}
+
+		if len(ent.Displacement) > 0 {
+			w.WriteString("\n### Challenger brand counter-marketing plays\n\n| Target Flaw | Challenger Counter-Hook | Angle & Copy Script | Recommended CTA | Impact ROI | Evidence |\n|---|---|---|---|---|---|\n")
+			for _, p := range ent.Displacement {
+				fmt.Fprintf(&w, "| %s | %s | %s | %s | %s | %s |\n",
+					Clean(p.TargetWeakness), Clean(p.CounterHook), Clean(p.AnglePlaybook), Clean(p.RecommendedCTA), Clean(p.ImpactROI), references(p.EvidenceIDs))
+			}
+		}
+	}
 	w.WriteString("\n## Evidence\n\n")
 	for _, e := range b.Evidence {
 		fmt.Fprintf(&w, "- [%s] %s · %s", e.ID, Clean(e.Title), Clean(e.Kind))
@@ -323,7 +397,7 @@ func Markdown(b model.Bundle) string {
 
 func describe(e model.Evidence) []string {
 	fields := map[string][]string{
-		"website":    {"h1", "ctas", "prices", "freePlan", "freeTrial", "contactSales"},
+		"website":    {"h1", "ctas", "prices", "freePlan", "freeTrial", "noCreditCard", "moneyBack", "annualDiscount", "soc2Certified", "contactSales", "growthRoles"},
 		"seo":        {"totalUrls", "sections", "patterns", "llmsTxt", "blogPostsLast90d"},
 		"tracking":   {"pixels", "tags", "gtmContainersScanned"},
 		"meta_ads":   {"totalInLibrary", "activeNow", "launchedLast30d", "formats"},
@@ -331,6 +405,8 @@ func describe(e model.Evidence) []string {
 		"apple_ads":  {"totalAdsLastYear", "active"},
 		"wayback":    {"firstSeen", "monthlySnapshots", "history"},
 		"appstore":   {"ratingCount", "rating", "installs", "seller"},
+		"reddit":     {"matchedThreads", "totalScore", "subreddits"},
+		"github":     {"fullName", "stars", "forks", "topics", "license", "pushedAt"},
 	}
 	d := dataMap(e.Data)
 	var out []string

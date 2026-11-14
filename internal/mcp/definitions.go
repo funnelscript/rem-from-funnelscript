@@ -52,6 +52,9 @@ var tools = []toolDefinition{
 			"only":        {"type": "array", "description": "Areas to investigate. Website collection always runs when a website is available.", "items": stringEnum("Marketing area", app.Areas)},
 			"handles":     {"type": "object", "description": "Override discovered handles, such as x or tiktok.", "additionalProperties": schema{"type": "string"}},
 			"max_credits": integerField("Maximum paid Scrape Creators credits for this run. Set to zero to skip paid requests.", 0, 500),
+			"stealth":     {"type": "boolean", "description": "Enable Scrapling-style browser TLS/HTTP-2 fingerprinting & anti-bot bypass."},
+			"keyless":     {"type": "boolean", "description": "Rely entirely on zero-cost extractors without consuming paid credits."},
+			"window":      stringField("Recency filter window (e.g. 30d, 90d; default: 30d)."),
 		}, "url"),
 	},
 	{

@@ -47,3 +47,47 @@ func TestCanceledInvestigationDoesNotPublish(t *testing.T) {
 		t.Fatal(rows, err)
 	}
 }
+
+func TestInvestigationPopulatesEntrepreneurAnalysis(t *testing.T) {
+	s := New(store.New(t.TempDir()))
+	s.get = getterFunc(func(_ context.Context, u string) (fetch.Response, error) {
+		return fetch.Response{
+			URL:    u,
+			Status: 200,
+			Body: []byte(`<html><head><title>Acme — Fast Modern Issue Tracker</title></head>
+<body>
+  <h1>Tired of slow, bloated project management software?</h1>
+  <p>Our engine is 10x faster than legacy tools. Over 50,000 teams trust Acme.</p>
+  <a href="/pricing">Get started free — no credit card required</a>
+</body></html>`),
+		}, nil
+	})
+
+	b, err := s.Investigate(context.Background(), "acme.com", Options{Only: []string{"website"}, Engine: "evidence"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(b.Entrepreneur.CreativeAngles) == 0 {
+		t.Fatal("expected b.Entrepreneur.CreativeAngles to be populated, got 0")
+	}
+
+	foundAgitation := false
+	for _, angle := range b.Entrepreneur.CreativeAngles {
+		if angle.Category == "agitation" {
+			foundAgitation = true
+			if len(angle.EvidenceIDs) == 0 {
+				t.Errorf("expected evidence ID citation in creative angle")
+			}
+		}
+	}
+	if !foundAgitation {
+		t.Errorf("expected agitation angle from 'Tired of slow, bloated...'")
+	}
+
+	doc := s.Doctor()
+	freeSources, ok := doc["freeSources"].([]string)
+	if !ok || len(freeSources) < 13 {
+		t.Fatalf("unexpected freeSources in doctor: %#v", doc["freeSources"])
+	}
+}

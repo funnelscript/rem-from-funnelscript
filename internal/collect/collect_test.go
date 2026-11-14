@@ -175,3 +175,14 @@ fbq("init","1234567890");`, "page")
 		}
 	}
 }
+
+func TestWebsiteCollectsCareersAndHiringSignals(t *testing.T) {
+	web := fixture{
+		"https://linear.example":         page(`<html><body><h1>Issue tracking</h1><a href="/careers">Careers</a><a href="/pricing">Pricing</a></body></html>`),
+		"https://linear.example/pricing": page(`<h1>Plans</h1><p>$12/user/mo billed annually. 30-day money-back guarantee. No credit card required. SOC 2 compliant.</p>`),
+		"https://linear.example/careers": page(`<h1>Join Linear</h1><p>We are looking for a Head of Growth, a Performance Marketing Manager, and a Senior SEO Specialist.</p>`),
+	}
+	_, _, result := Website(context.Background(), web, model.Target{Kind: "website", URL: "https://linear.example", Domain: "linear.example"})
+	assertEvidenceData(t, result, "Hiring signals:", `"growthRoles"`, `"Head of Growth"`)
+	assertEvidenceData(t, result, "Monetization:", `"noCreditCard":true`, `"moneyBack":true`, `"annualDiscount":true`, `"soc2Certified":true`)
+}

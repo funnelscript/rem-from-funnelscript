@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -30,6 +31,11 @@ var (
 type Client struct {
 	HTTP      *http.Client
 	allowTest bool
+	stealth   bool
+}
+
+func (c *Client) SetStealth(stealth bool) {
+	c.stealth = stealth
 }
 
 func New() *Client {
@@ -49,6 +55,15 @@ func New() *Client {
 					return nil, ErrDestination
 				}
 			}
+			slices.SortStableFunc(ips, func(a, b netip.Addr) int {
+				if a.Is4() && !b.Is4() {
+					return -1
+				}
+				if !a.Is4() && b.Is4() {
+					return 1
+				}
+				return 0
+			})
 			var last error = ErrDestination
 			for _, ip := range ips {
 				conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
@@ -60,9 +75,9 @@ func New() *Client {
 			return nil, last
 		},
 		ForceAttemptHTTP2: true, MaxIdleConns: 24, MaxIdleConnsPerHost: 4, MaxConnsPerHost: 6,
-		IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 6 * time.Second, ResponseHeaderTimeout: 9 * time.Second,
+		IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 8 * time.Second, ResponseHeaderTimeout: 12 * time.Second,
 	}
-	return &Client{HTTP: &http.Client{Transport: transport, Timeout: 14 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
+	return &Client{HTTP: &http.Client{Transport: transport, Timeout: 18 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 5 {
 			return errors.New("redirect limit reached")
 		}
@@ -123,18 +138,35 @@ func (c *Client) Get(ctx context.Context, rawURL string) (Response, error) {
 		if err != nil {
 			return Response{}, err
 		}
-		req.Header.Set("User-Agent", "REM-Go/0.1 (public marketing research)")
-		req.Header.Set("Accept", "text/html, application/json, application/xml, text/plain;q=0.9, */*;q=0.3")
+		if c.stealth {
+			req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36")
+			req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+			req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+			req.Header.Set("Sec-CH-UA", `"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"`)
+			req.Header.Set("Sec-CH-UA-Mobile", "?0")
+			req.Header.Set("Sec-CH-UA-Platform", `"macOS"`)
+			req.Header.Set("Sec-Fetch-Dest", "document")
+			req.Header.Set("Sec-Fetch-Mode", "navigate")
+			req.Header.Set("Sec-Fetch-Site", "cross-site")
+			req.Header.Set("Sec-Fetch-User", "?1")
+			req.Header.Set("Upgrade-Insecure-Requests", "1")
+			if req.Header.Get("Referer") == "" && u.Scheme == "https" {
+				req.Header.Set("Referer", "https://www.google.com/")
+			}
+		} else {
+			req.Header.Set("User-Agent", "REM-Go/0.1 (public marketing research)")
+			req.Header.Set("Accept", "text/html, application/json, application/xml, text/plain;q=0.9, */*;q=0.3")
+		}
 		res, err := c.HTTP.Do(req)
 		if err != nil {
 			return Response{}, err
 		}
-		if attempt == 0 && (res.StatusCode == 502 || res.StatusCode == 503 || res.StatusCode == 504) {
+		if attempt == 0 && (res.StatusCode == 429 || res.StatusCode == 502 || res.StatusCode == 503 || res.StatusCode == 504) {
 			res.Body.Close()
 			select {
 			case <-ctx.Done():
 				return Response{}, ctx.Err()
-			case <-time.After(200 * time.Millisecond):
+			case <-time.After(250 * time.Millisecond):
 			}
 			continue
 		}

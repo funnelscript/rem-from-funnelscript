@@ -122,6 +122,9 @@ func (m marketing) investigate(ctx context.Context, raw json.RawMessage) (string
 		Only       []string          `json:"only"`
 		Handles    map[string]string `json:"handles"`
 		MaxCredits *int              `json:"max_credits"`
+		Stealth    *bool             `json:"stealth"`
+		Keyless    *bool             `json:"keyless"`
+		Window     string            `json:"window"`
 	}
 	if err := decodeObject(raw, &args); err != nil {
 		return "", err
@@ -134,7 +137,13 @@ func (m marketing) investigate(ctx context.Context, raw json.RawMessage) (string
 			return "", fmt.Errorf("unknown area %q", area)
 		}
 	}
-	opts := app.Options{Only: args.Only, Handles: args.Handles, Engine: "evidence"}
+	opts := app.Options{Only: args.Only, Handles: args.Handles, Engine: "evidence", Window: args.Window}
+	if args.Stealth != nil && *args.Stealth {
+		opts.Stealth = true
+	}
+	if args.Keyless != nil && *args.Keyless {
+		opts.Keyless = true
+	}
 	if args.MaxCredits != nil {
 		if *args.MaxCredits < 0 || *args.MaxCredits > 500 {
 			return "", errors.New("max_credits must be between 0 and 500")
@@ -165,6 +174,26 @@ func investigationSummary(bundle model.Bundle) string {
 			fmt.Fprintf(&summary, " [%s]", id)
 		}
 		summary.WriteByte('\n')
+	}
+	if len(bundle.Entrepreneur.CreativeAngles) > 0 {
+		fmt.Fprintf(&summary, "\n## Creative angles (REA): %d identified\n", len(bundle.Entrepreneur.CreativeAngles))
+		for _, a := range bundle.Entrepreneur.CreativeAngles {
+			fmt.Fprintf(&summary, "- [%s] %s: %s", report.Clean(a.Category), report.Clean(a.Format), report.Clean(oneLine(a.Hook)))
+			for _, id := range a.EvidenceIDs {
+				fmt.Fprintf(&summary, " [%s]", id)
+			}
+			summary.WriteByte('\n')
+		}
+	}
+	if len(bundle.Entrepreneur.Displacement) > 0 {
+		fmt.Fprintf(&summary, "\n## Day-1 Displacement plays (Replica-Entrepreneur): %d plays\n", len(bundle.Entrepreneur.Displacement))
+		for _, p := range bundle.Entrepreneur.Displacement {
+			fmt.Fprintf(&summary, "- %s -> Counter: %s (%s)", report.Clean(oneLine(p.TargetWeakness)), report.Clean(oneLine(p.CounterHook)), report.Clean(p.ImpactROI))
+			for _, id := range p.EvidenceIDs {
+				fmt.Fprintf(&summary, " [%s]", id)
+			}
+			summary.WriteByte('\n')
+		}
 	}
 	summary.WriteString("\n## Evidence index\n")
 	for _, item := range bundle.Evidence {

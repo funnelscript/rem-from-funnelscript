@@ -179,3 +179,76 @@ func TestAppleStoreLookupUsesStorefrontFromTarget(t *testing.T) {
 	})
 	_, _, _ = Apps(t.Context(), get, model.Target{Input: "https://apps.apple.com/gb/app/name/id123456", Kind: "app_store", AppleID: "123456"}, model.Discovered{})
 }
+
+func TestRedditPublicParsesThreadsAndSubreddits(t *testing.T) {
+	get := freeFixture(func(u *url.URL) (int, string, error) {
+		if !strings.Contains(u.Host, "reddit.com") || u.Path != "/search.json" {
+			t.Fatalf("unexpected URL: %s", u)
+		}
+		return 200, `{
+			"data": {
+				"children": [
+					{
+						"data": {
+							"id": "t1",
+							"title": "Why we switched to Linear",
+							"subreddit": "programming",
+							"score": 340,
+							"num_comments": 85,
+							"permalink": "/r/programming/comments/t1/linear",
+							"created_utc": 1710000000
+						}
+					}
+				]
+			}
+		}`, nil
+	})
+
+	result := RedditPublic(t.Context(), get, model.Target{Domain: "linear.app"})
+	if len(result.Evidence) != 1 {
+		t.Fatalf("expected 1 evidence item, got %d", len(result.Evidence))
+	}
+	ev := result.Evidence[0]
+	if ev.Source != "reddit" {
+		t.Errorf("expected source reddit, got %s", ev.Source)
+	}
+	data := ev.Data.(map[string]any)
+	if data["matchedThreads"] != 1 || data["totalScore"] != 340 {
+		t.Errorf("unexpected data %+v", data)
+	}
+}
+
+func TestGitHubPublicParsesRepoMetrics(t *testing.T) {
+	get := freeFixture(func(u *url.URL) (int, string, error) {
+		if !strings.Contains(u.Host, "github.com") || !strings.Contains(u.Path, "/repos/owner/repo") {
+			t.Fatalf("unexpected URL: %s", u)
+		}
+		return 200, `{
+			"name": "repo",
+			"full_name": "owner/repo",
+			"description": "An open source engine",
+			"stargazers_count": 5200,
+			"forks_count": 410,
+			"open_issues_count": 25,
+			"topics": ["marketing", "growth"],
+			"pushed_at": "2026-11-10T12:00:00Z",
+			"license": {"spdx_id": "MIT"}
+		}`, nil
+	})
+
+	discovered := model.Discovered{
+		Socials: map[string]string{"github": "owner/repo"},
+	}
+	result := GitHubPublic(t.Context(), get, model.Target{Domain: "example.com"}, discovered)
+	if len(result.Evidence) != 1 {
+		t.Fatalf("expected 1 evidence item, got %d", len(result.Evidence))
+	}
+	ev := result.Evidence[0]
+	if ev.Source != "github" {
+		t.Errorf("expected source github, got %s", ev.Source)
+	}
+	data := ev.Data.(map[string]any)
+	if data["stars"] != 5200 || data["forks"] != 410 || data["license"] != "MIT" {
+		t.Errorf("unexpected data %+v", data)
+	}
+}

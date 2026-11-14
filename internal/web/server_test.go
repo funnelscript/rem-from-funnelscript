@@ -176,6 +176,39 @@ func TestCompareLatestRuns(t *testing.T) {
 	}
 }
 
+func TestStartRunAcceptsStealthKeylessAndWindow(t *testing.T) {
+	receivedOpts := make(chan app.Options, 1)
+	h := newHandler(backend{
+		doctor: func() map[string]any {
+			return map[string]any{"engines": map[string]bool{"evidence": true}}
+		},
+		investigate: func(ctx context.Context, input string, opts app.Options) (model.Bundle, error) {
+			receivedOpts <- opts
+			return model.Bundle{ID: "run-stealth", Brand: "Example"}, nil
+		},
+	})
+
+	body := `{"url":"example.com","stealth":true,"keyless":true,"window":"30d"}`
+	w := request(t, h, "POST", "/api/runs", body)
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("expected accepted status, got %d: %s", w.Code, w.Body)
+	}
+	select {
+	case opts := <-receivedOpts:
+		if !opts.Stealth {
+			t.Errorf("expected Stealth=true, got false")
+		}
+		if !opts.Keyless {
+			t.Errorf("expected Keyless=true, got false")
+		}
+		if opts.Window != "30d" {
+			t.Errorf("expected Window=30d, got %q", opts.Window)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("investigate was not invoked within timeout")
+	}
+}
+
 func readJobID(t *testing.T, w *httptest.ResponseRecorder) string {
 	t.Helper()
 	if w.Code != http.StatusAccepted {

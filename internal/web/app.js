@@ -8,6 +8,8 @@ const labels = {
   geo: "AI search", paid_meta: "Meta ads", paid_apple: "Apple ads", paid_google: "Google ads",
   paid_linkedin: "LinkedIn ads", paid_tiktok: "TikTok ads", paid_reddit: "Reddit ads",
   appstore: "App Store", playstore: "Google Play", llms: "LLMs.txt",
+  open_source: "Open Source / Developer", reddit_marketing: "Reddit Community",
+  github: "GitHub Public", reddit: "Reddit Public",
 };
 const defaultAreas = ["website", "seo", "history", "apps", "paid", "social", "founders", "community"];
 const panels = ["overview", "report", "evidence", "content", "unknowns"];
@@ -155,6 +157,10 @@ async function begin(event) {
   if (credits !== "") body.maxCredits = Number(credits);
   const model = $("model").value.trim();
   if (model && body.engine !== "evidence") body.model = model;
+  if ($("stealth") && $("stealth").checked) body.stealth = true;
+  if ($("keyless") && $("keyless").checked) body.keyless = true;
+  const windowVal = $("window") && $("window").value.trim();
+  if (windowVal) body.window = windowVal;
   try {
     body.handles = getHandles($("handles").value);
     $("start").disabled = true;
@@ -477,9 +483,18 @@ function displayRun(id, data) {
     };
   }
   $("evidence-link").href = `${path}/evidence.json`;
-  $("metrics").replaceChildren(...[
-    [current.evidence.length, "Evidence items"], [current.content.length, "Ads & posts"], [bundle.unknowns?.length || 0, "Unknowns"],
-  ].map(([number, name]) => {
+  const metricCards = [
+    [current.evidence.length, "Evidence items"],
+    [current.content.length, "Ads & posts"],
+    [bundle.unknowns?.length || 0, "Unknowns"],
+  ];
+  if (bundle.entrepreneur?.creativeAngles?.length) {
+    metricCards.push([bundle.entrepreneur.creativeAngles.length, "Creative angles"]);
+  }
+  if (bundle.entrepreneur?.displacement?.length) {
+    metricCards.push([bundle.entrepreneur.displacement.length, "Displacement plays"]);
+  }
+  $("metrics").replaceChildren(...metricCards.map(([number, name]) => {
     const metric = el("div", null, "metric");
     metric.append(el("strong", number), el("span", name));
     return metric;

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
 	"github.com/funnelscript/rem-from-funnelscript/internal/model"
@@ -85,5 +86,168 @@ func Community(ctx context.Context, get fetch.Getter, target model.Target) model
 		appendUnknown(&result, "community", "No matching links in the checked results and the Hacker News search has additional candidates", manual)
 	}
 	appendObservation(&result, "hackernews", title, manual, stories)
+	return result
+}
+
+type redditPost struct {
+	ID        string  `json:"id"`
+	Title     string  `json:"title"`
+	Subreddit string  `json:"subreddit"`
+	Score     int     `json:"score"`
+	Comments  int     `json:"num_comments"`
+	Permalink string  `json:"permalink"`
+	URL       string  `json:"url"`
+	Created   float64 `json:"created_utc"`
+}
+
+type redditListing struct {
+	Data struct {
+		Children []struct {
+			Data redditPost `json:"data"`
+		} `json:"children"`
+	} `json:"data"`
+}
+
+// RedditPublic queries keyless public search for community discussions about the target.
+func RedditPublic(ctx context.Context, get fetch.Getter, target model.Target) model.Result {
+	var result model.Result
+	queryTarget := target.Domain
+	if queryTarget == "" {
+		queryTarget = target.Brand
+	}
+	if queryTarget == "" {
+		appendUnknown(&result, "reddit", "No domain or brand available for Reddit search", "https://www.reddit.com/search/")
+		return result
+	}
+	searchURL := "https://www.reddit.com/search.json?q=" + url.QueryEscape(queryTarget) + "&sort=top&t=year&limit=25"
+	manual := "https://www.reddit.com/search/?q=" + url.QueryEscape(queryTarget)
+
+	var listing redditListing
+	if err := freeJSON(ctx, get, searchURL, &listing); err != nil {
+		appendUnknown(&result, "reddit", "Reddit public search unavailable: "+err.Error(), manual)
+		return result
+	}
+
+	threads := make([]map[string]any, 0, len(listing.Data.Children))
+	totalScore := 0
+	subreddits := make(map[string]int)
+
+	for _, child := range listing.Data.Children {
+		p := child.Data
+		if p.Title == "" {
+			continue
+		}
+		totalScore += p.Score
+		subreddits[p.Subreddit]++
+		if len(threads) < 10 {
+			permalink := p.Permalink
+			if !strings.HasPrefix(permalink, "http") {
+				permalink = "https://www.reddit.com" + permalink
+			}
+			threads = append(threads, map[string]any{
+				"title":     brief(p.Title, 180),
+				"subreddit": p.Subreddit,
+				"score":     p.Score,
+				"comments":  p.Comments,
+				"url":       permalink,
+				"created":   time.Unix(int64(p.Created), 0).UTC().Format("2006-01-02"),
+			})
+		}
+	}
+
+	if len(threads) == 0 {
+		appendObservation(&result, "reddit", "Reddit returned no matching threads in top search results", manual, map[string]any{
+			"threads": []any{}, "matchedThreads": 0, "totalScore": 0,
+		})
+		return result
+	}
+
+	topSubs := make([]string, 0, len(subreddits))
+	for sub := range subreddits {
+		topSubs = append(topSubs, "r/"+sub)
+	}
+	slices.Sort(topSubs)
+
+	title := fmt.Sprintf("Reddit: %d public threads discussing %s, total score %d across %d subreddits", len(threads), queryTarget, totalScore, len(topSubs))
+	appendObservation(&result, "reddit", title, manual, map[string]any{
+		"threads":        threads,
+		"matchedThreads": len(threads),
+		"totalScore":     totalScore,
+		"subreddits":     topSubs,
+	})
+	return result
+}
+
+type gitHubRepo struct {
+	Name        string   `json:"name"`
+	FullName    string   `json:"full_name"`
+	Description string   `json:"description"`
+	Stars       int      `json:"stargazers_count"`
+	Forks       int      `json:"forks_count"`
+	OpenIssues  int      `json:"open_issues_count"`
+	Topics      []string `json:"topics"`
+	PushedAt    string   `json:"pushed_at"`
+	License     *struct {
+		SPDX string `json:"spdx_id"`
+	} `json:"license"`
+}
+
+// GitHubPublic extracts public repository intelligence without requiring API tokens.
+func GitHubPublic(ctx context.Context, get fetch.Getter, target model.Target, discovered model.Discovered) model.Result {
+	var result model.Result
+	gh := discovered.Socials["github"]
+	if gh == "" {
+		return result
+	}
+	gh = strings.TrimPrefix(gh, "@")
+	parts := strings.Split(strings.Trim(gh, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		return result
+	}
+
+	var repoURL, apiURL string
+	if len(parts) >= 2 {
+		repoURL = "https://github.com/" + parts[0] + "/" + parts[1]
+		apiURL = "https://api.github.com/repos/" + parts[0] + "/" + parts[1]
+	} else {
+		repoURL = "https://github.com/" + parts[0]
+		apiURL = "https://api.github.com/users/" + parts[0] + "/repos?sort=updated&per_page=1"
+	}
+
+	if len(parts) >= 2 {
+		var repo gitHubRepo
+		if err := freeJSON(ctx, get, apiURL, &repo); err != nil {
+			appendUnknown(&result, "community_launches", "GitHub public API unavailable: "+err.Error(), repoURL)
+			return result
+		}
+		license := ""
+		if repo.License != nil {
+			license = repo.License.SPDX
+		}
+		title := fmt.Sprintf("GitHub: %s with %d stars, %d forks", repo.FullName, repo.Stars, repo.Forks)
+		appendObservation(&result, "github", title, repoURL, map[string]any{
+			"fullName":   repo.FullName,
+			"stars":      repo.Stars,
+			"forks":      repo.Forks,
+			"openIssues": repo.OpenIssues,
+			"topics":     repo.Topics,
+			"license":    license,
+			"pushedAt":   repo.PushedAt,
+		})
+	} else {
+		var repos []gitHubRepo
+		if err := freeJSON(ctx, get, apiURL, &repos); err != nil || len(repos) == 0 {
+			appendUnknown(&result, "community_launches", "GitHub public org/user info: no public repos found", repoURL)
+			return result
+		}
+		repo := repos[0]
+		title := fmt.Sprintf("GitHub: %s active repo %s with %d stars", parts[0], repo.Name, repo.Stars)
+		appendObservation(&result, "github", title, repoURL, map[string]any{
+			"fullName": repo.FullName,
+			"stars":    repo.Stars,
+			"forks":    repo.Forks,
+			"pushedAt": repo.PushedAt,
+		})
+	}
 	return result
 }

@@ -93,6 +93,40 @@ type Identity struct {
 	Founders []Founder `json:"founders"`
 }
 
+type CreativeAngle struct {
+	Category    string   `json:"category"`
+	Hook        string   `json:"hook"`
+	Mechanism   string   `json:"mechanism"`
+	Proof       string   `json:"proof"`
+	OfferCTA    string   `json:"offerCta"`
+	Format      string   `json:"format"`
+	EvidenceIDs []string `json:"evidenceIds"`
+}
+
+type Grievance struct {
+	Theme         string   `json:"theme"`
+	Score         float64  `json:"score"`
+	EvidenceCount int      `json:"evidenceCount"`
+	SampleQuotes  []string `json:"sampleQuotes"`
+	Sources       []string `json:"sources"`
+	EvidenceIDs   []string `json:"evidenceIds"`
+}
+
+type DisplacementPlay struct {
+	TargetWeakness string   `json:"targetWeakness"`
+	CounterHook    string   `json:"counterHook"`
+	AnglePlaybook  string   `json:"anglePlaybook"`
+	RecommendedCTA string   `json:"recommendedCta"`
+	ImpactROI      string   `json:"impactRoi"`
+	EvidenceIDs    []string `json:"evidenceIds"`
+}
+
+type EntrepreneurAnalysis struct {
+	TopGrievances  []Grievance        `json:"topGrievances,omitempty"`
+	CreativeAngles []CreativeAngle    `json:"creativeAngles,omitempty"`
+	Displacement   []DisplacementPlay `json:"displacement,omitempty"`
+}
+
 type Metadata struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -108,21 +142,22 @@ type Credits struct {
 }
 
 type Bundle struct {
-	ID            string         `json:"id,omitempty"`
-	Tool          Metadata       `json:"tool"`
-	Harness       Harness        `json:"harness"`
-	Target        Target         `json:"target"`
-	GeneratedAt   string         `json:"generatedAt"`
-	Brand         string         `json:"brand"`
-	Discovered    Discovered     `json:"discovered"`
-	Scorecard     []ChannelScore `json:"scorecard"`
-	Evidence      []Evidence     `json:"evidence"`
-	Unknowns      []Unknown      `json:"unknowns"`
-	Sources       []SourceRun    `json:"sources"`
-	Credits       Credits        `json:"credits"`
-	Content       []Content      `json:"content"`
-	Identity      Identity       `json:"identity"`
-	ReportWarning string         `json:"reportWarning,omitempty"`
+	ID            string               `json:"id,omitempty"`
+	Tool          Metadata             `json:"tool"`
+	Harness       Harness              `json:"harness"`
+	Target        Target               `json:"target"`
+	GeneratedAt   string               `json:"generatedAt"`
+	Brand         string               `json:"brand"`
+	Discovered    Discovered           `json:"discovered"`
+	Scorecard     []ChannelScore       `json:"scorecard"`
+	Evidence      []Evidence           `json:"evidence"`
+	Unknowns      []Unknown            `json:"unknowns"`
+	Sources       []SourceRun          `json:"sources"`
+	Credits       Credits              `json:"credits"`
+	Content       []Content            `json:"content"`
+	Identity      Identity             `json:"identity"`
+	Entrepreneur  EntrepreneurAnalysis `json:"entrepreneur,omitempty"`
+	ReportWarning string               `json:"reportWarning,omitempty"`
 }
 
 type Summary struct {

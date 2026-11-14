@@ -7,5 +7,8 @@ type Options struct {
 	BudgetSet  bool
 	Engine     string
 	Model      string
+	Stealth    bool
+	Keyless    bool
+	Window     string
 	OnStage    func(stage, state string)
 }

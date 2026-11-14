@@ -228,6 +228,9 @@ type runInput struct {
 	MaxCredits *int              `json:"maxCredits,omitempty"`
 	Engine     string            `json:"engine,omitempty"`
 	Model      string            `json:"model,omitempty"`
+	Stealth    bool              `json:"stealth,omitempty"`
+	Keyless    bool              `json:"keyless,omitempty"`
+	Window     string            `json:"window,omitempty"`
 }
 
 func (s *server) startRun(w http.ResponseWriter, r *http.Request) {
@@ -281,7 +284,15 @@ func (s *server) startRun(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	opts := app.Options{Only: input.Only, Handles: input.Handles, Engine: input.Engine, Model: input.Model}
+	opts := app.Options{
+		Only:    input.Only,
+		Handles: input.Handles,
+		Engine:  input.Engine,
+		Model:   input.Model,
+		Stealth: input.Stealth,
+		Keyless: input.Keyless,
+		Window:  input.Window,
+	}
 	if input.MaxCredits != nil {
 		opts.BudgetSet = true
 		opts.MaxCredits = *input.MaxCredits
