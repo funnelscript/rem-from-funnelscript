@@ -1,0 +1,52 @@
+{
+  "evals": [
+    {
+      "id": "trigger-saas-re",
+      "prompt": "Reverse engineer Linear web app behavior and design tokens",
+      "assertions": [
+        {
+          "pattern": "rem",
+          "required": true
+        },
+        {
+          "pattern": "kb",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "trigger-ledger-check",
+      "prompt": "Validate our clean-room task DAG in .re-ledger for cycle errors",
+      "assertions": [
+        {
+          "pattern": "ledger",
+          "required": true
+        },
+        {
+          "pattern": "check",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "trigger-launch-barriers",
+      "prompt": "Audit regulatory and infrastructure launch barriers for our rebuild",
+      "assertions": [
+        {
+          "pattern": "barriers",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "negative-collision-1",
+      "prompt": "Tell me a generic joke about programming",
+      "assertions": [
+        {
+          "pattern": "rem",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

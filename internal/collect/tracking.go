@@ -6,9 +6,10 @@ import (
 	"regexp"
 	"strings"
 
+	"golang.org/x/net/html"
+
 	"github.com/funnelscript/rem-from-funnelscript/internal/fetch"
 	"github.com/funnelscript/rem-from-funnelscript/internal/model"
-	"golang.org/x/net/html"
 )
 
 type trackingTag struct {

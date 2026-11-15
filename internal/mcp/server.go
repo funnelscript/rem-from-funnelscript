@@ -7,11 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
 
 	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/kb"
 	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"github.com/funnelscript/rem-from-funnelscript/internal/report"
 )
@@ -30,6 +35,7 @@ type marketingService interface {
 	WriteReport(context.Context, model.Bundle, string, string) (string, error)
 	load(string) (model.Bundle, error)
 	latestPair(string) (model.Bundle, model.Bundle, error)
+	doctor() map[string]any
 }
 
 type appAdapter struct{ *app.Service }
@@ -37,6 +43,9 @@ type appAdapter struct{ *app.Service }
 func (a *appAdapter) load(id string) (model.Bundle, error) { return a.Store.Load(id) }
 func (a *appAdapter) latestPair(domain string) (model.Bundle, model.Bundle, error) {
 	return a.Store.LatestPair(domain)
+}
+func (a *appAdapter) doctor() map[string]any {
+	return a.Service.Doctor()
 }
 
 type marketing struct{ service marketingService }
@@ -94,6 +103,24 @@ func (m marketing) call(ctx context.Context, raw json.RawMessage) (any, *rpcErro
 		invoke = m.writeReport
 	case "compare_runs":
 		invoke = m.compareRuns
+	case "kb_init":
+		invoke = m.kbInit
+	case "kb_check":
+		invoke = m.kbCheck
+	case "kb_get_script":
+		invoke = m.kbGetScript
+	case "kb_build_report":
+		invoke = m.kbBuildReport
+	case "kb_pack":
+		invoke = m.kbPack
+	case "kb_barriers":
+		invoke = m.kbBarriers
+	case "kb_extract":
+		invoke = m.kbExtract
+	case "ledger_check":
+		invoke = m.ledgerCheck
+	case "doctor":
+		invoke = m.doctor
 	default:
 		return nil, invalidParams("Unknown tool: " + call.Name)
 	}
@@ -419,4 +446,197 @@ func jsonText(value any) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func (m marketing) kbInit(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Product string `json:"product"`
+		Dir     string `json:"dir"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Product) == "" {
+		return "", errors.New("product is required")
+	}
+	dir, err := kb.Init(args.Dir, args.Product, false)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Knowledge base initialized at: %s", dir), nil
+}
+
+func (m marketing) kbCheck(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Dir     string `json:"dir"`
+		Closing bool   `json:"closing"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Dir) == "" {
+		return "", errors.New("dir is required")
+	}
+	res, err := kb.Check(args.Dir, args.Closing)
+	if err != nil {
+		return "", err
+	}
+	b, _ := json.MarshalIndent(res, "", "  ")
+	return string(b), nil
+}
+
+func (m marketing) kbGetScript(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Name string `json:"name"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Name) == "" {
+		return "", errors.New("name is required (inventory, tokens, mask, annotate)")
+	}
+	return kb.Script(args.Name)
+}
+
+func (m marketing) kbBuildReport(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Dir string `json:"dir"`
+		Out string `json:"out"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Dir) == "" {
+		return "", errors.New("dir is required")
+	}
+	htmlContent, err := kb.Report(args.Dir)
+	if err != nil {
+		return "", err
+	}
+	outFile := args.Out
+	if outFile == "" {
+		outFile = filepath.Join(args.Dir, "REPORT.html")
+	}
+	if err := os.WriteFile(outFile, []byte(htmlContent), 0o644); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Report compiled and saved to: %s", outFile), nil
+}
+
+func (m marketing) kbPack(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Dir  string `json:"dir"`
+		Out  string `json:"out"`
+		Full bool   `json:"full"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Dir) == "" {
+		return "", errors.New("dir is required")
+	}
+	outFile, err := kb.Pack(args.Dir, args.Out, args.Full)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Handoff bundle packed to: %s", outFile), nil
+}
+
+func (m marketing) kbBarriers(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Dir string `json:"dir"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.Dir) == "" {
+		return "", errors.New("dir is required")
+	}
+	barriers, err := kb.ParseBarriers(args.Dir)
+	if err != nil {
+		return "", err
+	}
+	b, _ := json.MarshalIndent(barriers, "", "  ")
+	return string(b), nil
+}
+
+func (m marketing) ledgerCheck(_ context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		Dir string `json:"dir"`
+	}
+	if err := decodeObject(raw, &args); err != nil {
+		return "", err
+	}
+	targetDir := args.Dir
+	if targetDir == "" {
+		targetDir = "."
+	}
+	res, err := kb.CheckLedger(targetDir)
+	if err != nil {
+		return "", err
+	}
+	b, _ := json.MarshalIndent(res, "", "  ")
+	return string(b), nil
+}
+
+func (m marketing) doctor(_ context.Context, _ json.RawMessage) (string, error) {
+	doc := m.service.doctor()
+	b, _ := json.MarshalIndent(doc, "", "  ")
+	return string(b), nil
+}
+
+func (m marketing) kbExtract(ctx context.Context, raw json.RawMessage) (string, error) {
+	var args struct {
+		URL      string `json:"url"`
+		Dir      string `json:"dir"`
+		Headless *bool  `json:"headless"`
+		MaskPII  *bool  `json:"mask_pii"`
+		Annotate *bool  `json:"annotate"`
+	}
+	if err := decodeObject(raw, &args); err != nil || strings.TrimSpace(args.URL) == "" {
+		return "", errors.New("url is required")
+	}
+	targetDir := args.Dir
+	if targetDir == "" {
+		u, err := url.Parse(args.URL)
+		host := args.URL
+		if err == nil && u.Hostname() != "" {
+			host = u.Hostname()
+		}
+		targetDir = "re-" + kb.Slugify(host)
+	}
+
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		if _, err := kb.Init(targetDir, targetDir, false); err != nil {
+			return "", fmt.Errorf("failed to initialize kb: %w", err)
+		}
+	}
+
+	driverCandidates := []string{
+		"tools/driver/extract.ts",
+		"../tools/driver/extract.ts",
+		filepath.Join(os.Getenv("REM_ROOT"), "tools/driver/extract.ts"),
+	}
+	var driverScript string
+	for _, c := range driverCandidates {
+		if c != "" {
+			if _, err := os.Stat(c); err == nil {
+				driverScript = c
+				break
+			}
+		}
+	}
+
+	if driverScript == "" {
+		return "", errors.New("browser extraction driver not found at tools/driver/extract.ts; run `rem setup` or ensure driver exists")
+	}
+
+	cmdArgs := []string{"run", driverScript, args.URL, "--dir", targetDir}
+	if args.Headless != nil && !*args.Headless {
+		cmdArgs = append(cmdArgs, "--headless=false")
+	}
+	if args.MaskPII != nil && !*args.MaskPII {
+		cmdArgs = append(cmdArgs, "--mask=false")
+	}
+	if args.Annotate != nil && !*args.Annotate {
+		cmdArgs = append(cmdArgs, "--annotate=false")
+	}
+
+	runner := "bun"
+	if _, err := exec.LookPath("bun"); err != nil {
+		if _, errNode := exec.LookPath("node"); errNode == nil {
+			runner = "node"
+		} else {
+			return "", errors.New("neither bun nor node was found in PATH to execute browser driver")
+		}
+	}
+
+	cmd := exec.CommandContext(ctx, runner, cmdArgs...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("browser extraction driver failed: %w\n%s", err, string(out))
+	}
+	return string(out), nil
 }

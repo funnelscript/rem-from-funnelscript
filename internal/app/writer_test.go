@@ -2,11 +2,12 @@ package app
 
 import (
 	"context"
-	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 type roundTrip func(*http.Request) (*http.Response, error)

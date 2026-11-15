@@ -96,8 +96,8 @@ func TestListsUpstreamToolAndPromptNames(t *testing.T) {
 		method, key string
 		names       []string
 	}{
-		{"tools/list", "tools", []string{"reverse_engineer_marketing", "get_evidence", "get_content", "get_playbook", "compare_runs", "validate_report", "write_report"}},
-		{"prompts/list", "prompts", []string{"investigate_company", "compare_competitors", "what_changed", "steal_the_playbook", "audit_unknowns"}},
+		{"tools/list", "tools", []string{"reverse_engineer_marketing", "get_evidence", "get_content", "get_playbook", "compare_runs", "validate_report", "write_report", "kb_init", "kb_check", "kb_get_script", "kb_build_report", "kb_pack", "kb_barriers", "kb_extract", "ledger_check", "doctor"}},
+		{"prompts/list", "prompts", []string{"investigate_company", "compare_competitors", "what_changed", "steal_the_playbook", "audit_unknowns", "reverse_engineer_saas", "audit_launch_barriers", "clean_room_reconstruct"}},
 	} {
 		got, failure := server.handle(context.Background(), list.method, nil)
 		encoded, err := json.Marshal(got)
@@ -114,6 +114,35 @@ func TestListsUpstreamToolAndPromptNames(t *testing.T) {
 				t.Errorf("%s omits %s", list.method, name)
 			}
 		}
+	}
+}
+
+func TestMCPKBTools(t *testing.T) {
+	tempDir := t.TempDir()
+	server := marketing{}
+
+	// 1. kb_init
+	initRes := toolCall(t, server, "kb_init", `{"product":"AcmeSaaS","dir":"`+tempDir+`"}`)
+	if initRes.IsError || !strings.Contains(initRes.Content[0].Text, "Knowledge base initialized") {
+		t.Fatalf("kb_init tool failed: %#v", initRes)
+	}
+
+	// 2. kb_check
+	checkRes := toolCall(t, server, "kb_check", `{"dir":"`+tempDir+`"}`)
+	if checkRes.IsError || !strings.Contains(checkRes.Content[0].Text, `"valid": true`) {
+		t.Fatalf("kb_check tool failed: %#v", checkRes)
+	}
+
+	// 3. kb_get_script
+	scriptRes := toolCall(t, server, "kb_get_script", `{"name":"inventory"}`)
+	if scriptRes.IsError || !strings.Contains(scriptRes.Content[0].Text, "window.__rem") {
+		t.Fatalf("kb_get_script tool failed: %#v", scriptRes)
+	}
+
+	// 4. kb_build_report
+	reportRes := toolCall(t, server, "kb_build_report", `{"dir":"`+tempDir+`"}`)
+	if reportRes.IsError || !strings.Contains(reportRes.Content[0].Text, "Report compiled and saved") {
+		t.Fatalf("kb_build_report tool failed: %#v", reportRes)
 	}
 }
 
@@ -165,6 +194,39 @@ func (s *fakeMarketing) latestPair(domain string) (model.Bundle, model.Bundle, e
 func (s *fakeMarketing) WriteReport(_ context.Context, _ model.Bundle, engine, modelName string) (string, error) {
 	s.engine, s.model = engine, modelName
 	return "# Evidence report", nil
+}
+
+func (s *fakeMarketing) doctor() map[string]any {
+	return map[string]any{"version": "test", "engines": map[string]bool{"evidence": true}}
+}
+
+func TestNewMCPTools(t *testing.T) {
+	service := &fakeMarketing{}
+	server := marketing{service: service}
+
+	// Test doctor
+	got := toolCall(t, server, "doctor", `{}`)
+	if got.IsError || !strings.Contains(got.Content[0].Text, "evidence") {
+		t.Fatalf("expected doctor result: %#v", got)
+	}
+
+	// Test ledger_check with missing dir
+	got = toolCall(t, server, "ledger_check", `{"dir":"/nonexistent/path"}`)
+	if !got.IsError {
+		t.Fatalf("expected ledger_check error for nonexistent dir: %#v", got)
+	}
+
+	// Test kb_barriers with missing dir
+	got = toolCall(t, server, "kb_barriers", `{"dir":"/nonexistent/path"}`)
+	if !got.IsError {
+		t.Fatalf("expected kb_barriers error for nonexistent dir: %#v", got)
+	}
+
+	// Test kb_pack with missing dir
+	got = toolCall(t, server, "kb_pack", `{"dir":"/nonexistent/path"}`)
+	if !got.IsError {
+		t.Fatalf("expected kb_pack error for nonexistent dir: %#v", got)
+	}
 }
 
 func fixtureBundle(id string) model.Bundle {

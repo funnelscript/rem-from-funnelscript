@@ -35,3 +35,47 @@ func TestNewFlagsParsed(t *testing.T) {
 		t.Fatalf("unexpected flags: %+v rest=%v err=%v", f, rest, err)
 	}
 }
+
+func TestKBCLICommands(t *testing.T) {
+	tempDir := t.TempDir()
+	var out, errOut bytes.Buffer
+
+	// 1. rem kb init
+	if err := run(context.Background(), []string{"kb", "init", "Acme", "--dir=" + tempDir}, &out, &errOut); err != nil {
+		t.Fatalf("kb init failed: %v, errOut: %s", err, errOut.String())
+	}
+
+	// 2. rem kb check --json
+	out.Reset()
+	errOut.Reset()
+	if err := run(context.Background(), []string{"kb", "check", tempDir, "--json"}, &out, &errOut); err != nil {
+		t.Fatalf("kb check failed: %v, errOut: %s", err, errOut.String())
+	}
+	if !json.Valid(out.Bytes()) {
+		t.Fatalf("kb check did not output valid JSON: %s", out.String())
+	}
+
+	// 3. rem kb script
+	out.Reset()
+	errOut.Reset()
+	if err := run(context.Background(), []string{"kb", "script", "inventory"}, &out, &errOut); err != nil {
+		t.Fatalf("kb script failed: %v, errOut: %s", err, errOut.String())
+	}
+	if out.Len() == 0 {
+		t.Fatal("kb script returned empty output")
+	}
+
+	// 4. rem kb report
+	out.Reset()
+	errOut.Reset()
+	if err := run(context.Background(), []string{"kb", "report", tempDir}, &out, &errOut); err != nil {
+		t.Fatalf("kb report failed: %v, errOut: %s", err, errOut.String())
+	}
+
+	// 5. rem kb pack
+	out.Reset()
+	errOut.Reset()
+	if err := run(context.Background(), []string{"kb", "pack", tempDir}, &out, &errOut); err != nil {
+		t.Fatalf("kb pack failed: %v, errOut: %s", err, errOut.String())
+	}
+}

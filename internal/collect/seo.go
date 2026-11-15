@@ -260,7 +260,7 @@ func readSitemap(body []byte) (sitemapFile, error) {
 	}
 	for {
 		token, err := decoder.Token()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return doc, nil
 		}
 		if err != nil {

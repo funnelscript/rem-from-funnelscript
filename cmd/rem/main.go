@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/funnelscript/rem-from-funnelscript/internal/app"
+	"github.com/funnelscript/rem-from-funnelscript/internal/kb"
 	"github.com/funnelscript/rem-from-funnelscript/internal/mcp"
 	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"github.com/funnelscript/rem-from-funnelscript/internal/report"
@@ -32,12 +33,21 @@ import (
 //go:embed demo/*
 var demo embed.FS
 
-const help = `REM From FunnelScript · public marketing research
+const help = `REM From FunnelScript · public marketing research & SaaS reverse engineering
 
 Usage
   rem <domain-or-store-url> [--only website,seo] [--no-ai] [--json] [--out DIR]
   rem diff <domain> | rem diff <run-or-path-a> <run-or-path-b> [--json]
   rem validate <run-or-path> <report.md> [--json]
+  rem extract <url> [--dir DIR] [--no-headless]
+  rem ledger check [dir] [--json]
+  rem kb init <product-name> [--dir DIR] [--git]
+  rem kb extract <url> [--dir DIR] [--no-headless]
+  rem kb check [dir] [--closing] [--json]
+  rem kb script <inventory|tokens|mask|annotate>
+  rem kb report [dir] [--out REPORT.html]
+  rem kb pack [dir] [--out FILE.zip] [--full]
+  rem kb barriers [dir] [--json]
   rem web [--port 4321] [--no-open]
   rem demo [--port 4321] [--no-open]
   rem mcp
@@ -54,7 +64,11 @@ Investigation options
   --engine      auto,evidence,anthropic,claude-code,codex
   --model       optional model for the selected writer
   --json        JSON to stdout, with the run also saved in history
-  --out         export directory, default rem-reports/<run-id>
+  --out         export directory or file path
+  --dir         target directory for knowledge base commands
+  --closing     enforce strict closing conditions on kb check
+  --full        include raw sandbox/log in kb pack
+  --git         initialize git repository on kb init
   -q, --quiet   suppress stage progress
   --home        override the history data directory
   -v, --version
@@ -62,7 +76,8 @@ Investigation options
 
 type flags struct {
 	help, version, noAI, json, quiet, noOpen, yes, dryRun, stealth, keyless bool
-	out, only, engine, model, home, clients, window                         string
+	closing, full, git, noHeadless                                         bool
+	out, only, engine, model, home, clients, window, dir                   string
 	port, credits                                                           int
 	budgetSet                                                               bool
 	handles                                                                 map[string]string
@@ -81,10 +96,11 @@ func parse(args []string) (flags, []string, error) {
 		"--no-ai": &f.noAI, "--json": &f.json, "--quiet": &f.quiet, "-q": &f.quiet,
 		"--no-open": &f.noOpen, "--yes": &f.yes, "--dry-run": &f.dryRun,
 		"--stealth": &f.stealth, "--keyless": &f.keyless,
+		"--closing": &f.closing, "--full": &f.full, "--git": &f.git, "--no-headless": &f.noHeadless,
 	}
 	stringsByName := map[string]*string{
 		"--out": &f.out, "--only": &f.only, "--engine": &f.engine, "--model": &f.model,
-		"--home": &f.home, "--client": &f.clients, "--window": &f.window,
+		"--home": &f.home, "--client": &f.clients, "--window": &f.window, "--dir": &f.dir,
 	}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
@@ -215,10 +231,16 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) error {
 		if f.json {
 			return printJSON(out, doctor)
 		}
-		fmt.Fprintf(out, "REM From FunnelScript %s\n\nPublic sources: %s\nScrape Creators key: %v\n", model.Version, strings.Join(doctor["freeSources"].([]string), ", "), doctor["scrapeCreators"])
+		fmt.Fprintf(out, "REM Unified System %s\n\nPublic sources: %s\nScrape Creators key: %v\n\nAI Engines:\n", model.Version, strings.Join(doctor["freeSources"].([]string), ", "), doctor["scrapeCreators"])
 		engines := doctor["engines"].(map[string]bool)
 		for _, name := range []string{"evidence", "anthropic", "claude-code", "codex"} {
 			fmt.Fprintf(out, "  %-12s %t\n", name, engines[name])
+		}
+		if drivers, ok := doctor["drivers"].(map[string]bool); ok {
+			fmt.Fprintln(out, "\nAutomation drivers:")
+			for _, name := range []string{"bun", "node", "playwright", "python3"} {
+				fmt.Fprintf(out, "  %-12s %t\n", name, drivers[name])
+			}
 		}
 		return nil
 	case "setup":
@@ -230,6 +252,34 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) error {
 		return diff(service, args, f.json, out)
 	case "validate":
 		return validate(service, args, f.json, out)
+	case "ledger":
+		if len(args) == 0 || args[0] != "check" {
+			return errors.New("usage: rem ledger check [dir] [--json]")
+		}
+		targetDir := "."
+		if len(args) > 1 {
+			targetDir = args[1]
+		}
+		res, err := kb.CheckLedger(targetDir)
+		if err != nil {
+			return err
+		}
+		if f.json {
+			return printJSON(out, res)
+		}
+		if res.Valid {
+			fmt.Fprintf(out, "Ledger %s OK (%d tasks)\n", res.LedgerDir, res.TaskCount)
+			return nil
+		}
+		fmt.Fprintf(errOut, "Ledger check failed with %d error(s):\n", len(res.Errors))
+		for _, e := range res.Errors {
+			fmt.Fprintf(errOut, "  - %s\n", e)
+		}
+		return errors.New("ledger check failed")
+	case "extract":
+		return runExtraction(args, f, out, errOut)
+	case "kb":
+		return runKB(args, f, out, errOut)
 	}
 	if len(args) != 0 {
 		return errors.New("pass one website or app store URL")
@@ -504,6 +554,172 @@ func serveWeb(ctx context.Context, s *app.Service, port int, noOpen bool, route 
 func startBrowser(bin string, args ...string) {
 	cmd := exec.Command(bin, args...)
 	if cmd.Start() == nil {
-		go cmd.Wait()
+		go func() { _ = cmd.Wait() }()
 	}
+}
+
+func runKB(args []string, f flags, out, errOut io.Writer) error {
+	if len(args) == 0 {
+		return errors.New("usage: rem kb <init|extract|check|script|report|pack|barriers>")
+	}
+	sub := args[0]
+	rest := args[1:]
+	switch sub {
+	case "extract":
+		return runExtraction(rest, f, out, errOut)
+	case "init":
+		if len(rest) == 0 {
+			return errors.New("usage: rem kb init <product-name> [--dir DIR] [--git]")
+		}
+		product := strings.Join(rest, " ")
+		dir, err := kb.Init(f.dir, product, f.git)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "Knowledge base initialized at: %s\n", dir)
+		return nil
+	case "check":
+		kbDir := "."
+		if len(rest) > 0 {
+			kbDir = rest[0]
+		} else if f.dir != "" {
+			kbDir = f.dir
+		}
+		res, err := kb.Check(kbDir, f.closing)
+		if err != nil {
+			return err
+		}
+		if f.json {
+			return printJSON(out, res)
+		}
+		if res.Valid {
+			fmt.Fprintf(out, "Knowledge base %s OK (%d definitions indexed)\n", res.KBDir, len(res.Definitions))
+			if res.Stats["openLedgerRows"] > 0 {
+				fmt.Fprintf(out, "  Note: %d open ledger rows remaining in sandbox/ledger.csv\n", res.Stats["openLedgerRows"])
+			}
+			return nil
+		}
+		fmt.Fprintf(errOut, "Knowledge base check failed with %d error(s):\n", len(res.Errors))
+		for _, e := range res.Errors {
+			fmt.Fprintf(errOut, "  - %s\n", e)
+		}
+		return errors.New("check failed")
+	case "script":
+		if len(rest) == 0 {
+			return errors.New("usage: rem kb script <inventory|tokens|mask|annotate>")
+		}
+		s, err := kb.Script(rest[0])
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(out, s)
+		return nil
+	case "report":
+		kbDir := "."
+		if len(rest) > 0 {
+			kbDir = rest[0]
+		} else if f.dir != "" {
+			kbDir = f.dir
+		}
+		htmlContent, err := kb.Report(kbDir)
+		if err != nil {
+			return err
+		}
+		outFile := f.out
+		if outFile == "" {
+			outFile = filepath.Join(kbDir, "REPORT.html")
+		}
+		if err := os.WriteFile(outFile, []byte(htmlContent), 0o644); err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "Report compiled to: %s\n", outFile)
+		return nil
+	case "pack":
+		kbDir := "."
+		if len(rest) > 0 {
+			kbDir = rest[0]
+		} else if f.dir != "" {
+			kbDir = f.dir
+		}
+		outFile, err := kb.Pack(kbDir, f.out, f.full)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "Handoff bundle packed to: %s\n", outFile)
+		return nil
+	case "barriers":
+		kbDir := "."
+		if len(rest) > 0 {
+			kbDir = rest[0]
+		} else if f.dir != "" {
+			kbDir = f.dir
+		}
+		barriers, err := kb.ParseBarriers(kbDir)
+		if err != nil {
+			return err
+		}
+		if f.json {
+			return printJSON(out, barriers)
+		}
+		fmt.Fprintf(out, "Launch Barriers for %s (%d found):\n", kbDir, len(barriers))
+		for _, b := range barriers {
+			fmt.Fprintf(out, "  %-8s %-30s [%s] %s (Lead time: %s)\n", b.ID, b.Title, b.Category, b.Severity, b.LeadTime)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown kb subcommand %q (valid: init, extract, check, script, report, pack, barriers)", sub)
+	}
+}
+
+func runExtraction(args []string, f flags, out, errOut io.Writer) error {
+	if len(args) == 0 {
+		return errors.New("usage: rem extract <url> [--dir DIR] [--no-headless]")
+	}
+	targetURL := args[0]
+	targetDir := f.dir
+	if targetDir == "" {
+		u, err := url.Parse(targetURL)
+		host := targetURL
+		if err == nil && u.Hostname() != "" {
+			host = u.Hostname()
+		}
+		targetDir = "re-" + kb.Slugify(host)
+	}
+
+	driverCandidates := []string{
+		"tools/driver/extract.ts",
+		"../tools/driver/extract.ts",
+		filepath.Join(os.Getenv("REM_ROOT"), "tools/driver/extract.ts"),
+	}
+	var driverScript string
+	for _, c := range driverCandidates {
+		if c != "" {
+			if _, err := os.Stat(c); err == nil {
+				driverScript = c
+				break
+			}
+		}
+	}
+	if driverScript == "" {
+		return errors.New("browser driver not found at tools/driver/extract.ts; run `rem setup` or ensure Bun is installed")
+	}
+
+	cmdArgs := []string{"run", driverScript, targetURL, "--dir", targetDir}
+	if f.noHeadless {
+		cmdArgs = append(cmdArgs, "--headless=false")
+	}
+
+	runner := "bun"
+	if _, err := exec.LookPath("bun"); err != nil {
+		if _, errNode := exec.LookPath("node"); errNode == nil {
+			runner = "node"
+		} else {
+			return errors.New("neither bun nor node was found in PATH to execute browser driver")
+		}
+	}
+
+	cmd := exec.Command(runner, cmdArgs...)
+	cmd.Stdout = out
+	cmd.Stderr = errOut
+	return cmd.Run()
 }
