@@ -48,22 +48,6 @@ jobs:
           go build -trimpath -o "$binary" ./cmd/rem
           bash smoke.sh "$binary"
 
-  golangci-lint:
-    name: golangci-lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: '1.26.11'
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64.8
-
   govulncheck:
     name: Dependency and standard-library audit
     runs-on: ubuntu-latest

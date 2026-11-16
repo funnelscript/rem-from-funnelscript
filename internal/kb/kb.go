@@ -21,7 +21,7 @@ var assetsFS embed.FS
 var (
 	// Standard ID patterns: FL, SRC, EV, BR, F, S, C, R, ENT, B, Q, L
 	// Also supports legacy E-### as an alias for EV-### in evidence checks.
-	idPattern = regexp.MustCompile(`\b(FL|SRC|EV|BR|F|S|C|R|ENT|E|B|Q|L)-(\d{3})\b`)
+	idPattern  = regexp.MustCompile(`\b(FL|SRC|EV|BR|F|S|C|R|ENT|E|B|Q|L)-(\d{3})\b`)
 	tagPattern = regexp.MustCompile(`\[(obs|net|doc|inf)(?:\s+([A-Z]+-\d{3}))?\]`)
 )
 
@@ -50,15 +50,15 @@ type CheckResult struct {
 
 // Barrier represents a parsed launch barrier entry.
 type Barrier struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Category    string `json:"category"`
-	Severity    string `json:"severity"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Category     string `json:"category"`
+	Severity     string `json:"severity"`
 	MarketWeight string `json:"marketWeight"`
-	LeadTime    string `json:"leadTime"`
-	Cost        string `json:"cost"`
-	Mitigation  string `json:"mitigation"`
-	Evidence    string `json:"evidence"`
+	LeadTime     string `json:"leadTime"`
+	Cost         string `json:"cost"`
+	Mitigation   string `json:"mitigation"`
+	Evidence     string `json:"evidence"`
 }
 
 // Script returns the embedded browser script by name.

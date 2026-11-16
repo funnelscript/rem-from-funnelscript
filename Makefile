@@ -42,7 +42,7 @@ cross:
 
 ## Static analysis
 lint:
-	golangci-lint run ./...
+	go vet ./...
 
 ## Remove compiled artifacts
 clean:

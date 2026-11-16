@@ -13,19 +13,19 @@ import (
 
 // ReportData represents the compiled knowledge base ready for HTML rendering.
 type ReportData struct {
-	Product       string            `json:"product"`
-	GeneratedAt   string            `json:"generatedAt"`
-	Charter       string            `json:"charter"`
-	Status        string            `json:"status"`
-	Screens       []ReportItem      `json:"screens"`
-	Components    []ReportItem      `json:"components"`
-	Rules         []ReportItem      `json:"rules"`
-	Entities      []ReportItem      `json:"entities"`
-	Barriers      []Barrier         `json:"barriers"`
-	Tokens        string            `json:"tokens"`
-	BuildBrief    string            `json:"buildBrief"`
-	LedgerSummary map[string]int    `json:"ledgerSummary"`
-	Stats         map[string]int    `json:"stats"`
+	Product       string         `json:"product"`
+	GeneratedAt   string         `json:"generatedAt"`
+	Charter       string         `json:"charter"`
+	Status        string         `json:"status"`
+	Screens       []ReportItem   `json:"screens"`
+	Components    []ReportItem   `json:"components"`
+	Rules         []ReportItem   `json:"rules"`
+	Entities      []ReportItem   `json:"entities"`
+	Barriers      []Barrier      `json:"barriers"`
+	Tokens        string         `json:"tokens"`
+	BuildBrief    string         `json:"buildBrief"`
+	LedgerSummary map[string]int `json:"ledgerSummary"`
+	Stats         map[string]int `json:"stats"`
 }
 
 // ReportItem holds title and body of an artifact.

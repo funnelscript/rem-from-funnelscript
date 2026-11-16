@@ -76,8 +76,8 @@ Investigation options
 
 type flags struct {
 	help, version, noAI, json, quiet, noOpen, yes, dryRun, stealth, keyless bool
-	closing, full, git, noHeadless                                         bool
-	out, only, engine, model, home, clients, window, dir                   string
+	closing, full, git, noHeadless                                          bool
+	out, only, engine, model, home, clients, window, dir                    string
 	port, credits                                                           int
 	budgetSet                                                               bool
 	handles                                                                 map[string]string
