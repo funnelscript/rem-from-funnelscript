@@ -1,6 +1,6 @@
 {
   "name": "@mamdouh-aboammar/rem",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "Unified Reverse Engineering & Clean-Room Software Reconstruction System",
   "bin": {
     "rem": "./bin/rem.js"
