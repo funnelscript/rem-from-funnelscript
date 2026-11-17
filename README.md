@@ -1,112 +1,161 @@
-# REM From FunnelScript
+# REM | Unified Reverse Engineering & Software Reconstruction System
 
-REM researches how a company acquires customers from a public website, App Store listing, or Google Play listing. Each run saves a Markdown report and a JSON evidence bundle. The CLI, local web app, and MCP server use the same collectors and run history.
+Use **REM** to document how an existing product behaves, rebuild the agreed behavior independently, or develop a new product from a brief. The system unifies:
+1. **Automated Headless Browser Extraction Driver**: Playwright and CDP automation running two-tier DOM PII masking, OKLCH design tokens, tech stack inventory, and numbered visual UI annotations with a single command.
+2. **SaaS Behavioral Reverse Engineering & Knowledge Base Engine** (inspired by Alex Netto's `alextnetto/res`): Live browser extraction, privacy-preserving two-tier PII masking, token extraction, Given/When/Then business rules, launch barrier matrices, interactive `REPORT.html`, and coding-agent handoffs (`BUILD.md`).
+3. **Clean-Room Software Reconstruction Workflow**: Strict safety environment levels (L1–L4), action classes (A0–A5), write gates, DAG task ledgers (`.re-ledger/`), and cryptographic evidence anchoring.
+4. **Public Marketing & Acquisition Intelligence** (`rem-from-funnelscript` Go engine): Stealth anti-bot HTTP/2 fingerprinting, zero-cost public endpoints (Reddit, HN, GitHub), career hiring signals, and deterministic channel scorecards.
+5. **Native MCP Server (16 Tools & 8 Prompts)**: Exposes marketing research, automated browser extraction, DAG ledger checks, and SaaS reverse engineering tools directly to AI coding agents (Antigravity, Claude Code, Codex, Cursor).
+6. **Official REM Agent Skill (`skills/rem/`)**: Tripartite specification (`SKILL.md`, `references/`, `usecases/`, `evals/`) validated with `@mamdouh-aboammar/omni-skill`.
 
-[![CI](https://github.com/funnelscript/rem-from-funnelscript/actions/workflows/ci.yml/badge.svg)](https://github.com/funnelscript/rem-from-funnelscript/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/funnelscript/rem-from-funnelscript)](https://github.com/funnelscript/rem-from-funnelscript/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+---
 
-## Install
+## 1. One-Command Installation
 
-Download the archive for your platform from [GitHub Releases](https://github.com/funnelscript/rem-from-funnelscript/releases/latest). Compare its SHA-256 hash with `SHA256SUMS`, extract it, and put `rem` or `rem.exe` on your path. The macOS archives contain unsigned binaries.
-
-With Go installed, you can build and install directly:
-
-```sh
-go install github.com/funnelscript/rem-from-funnelscript/cmd/rem@v0.1.0
-rem demo
-```
-
-## Run it
-
-From the source directory with Go 1.26 or later:
+Install REM, its browser automation drivers, agent skills, and MCP configuration with one command:
 
 ```sh
-make build   # or: go build -trimpath -o rem ./cmd/rem
-./rem doctor
-./rem linear.app --only website,seo --no-ai --out ./rem-reports/linear
-./rem validate ./rem-reports/linear/evidence.json ./rem-reports/linear/report.md
-./rem web
+# Local installer
+./install.sh
+
+# Or via curl from GitHub
+curl -fsSL https://raw.githubusercontent.com/funnelscript/rem-from-funnelscript/main/install.sh | bash
 ```
 
-### Build & test automation
+Alternatively, try REM ad-hoc without global installation:
 
 ```sh
-make build    # Build optimized binary with -trimpath and -ldflags="-s -w"
-make test     # Run full test suite with race detector (-race)
-make lint     # Run go vet ./...
-make smoke    # Run end-to-end smoke test on linear.app (or $REM_LIVE_TARGET)
-make install  # Install binary to $(GOPATH)/bin/rem
-make cross    # Cross-compile for linux/amd64 and darwin/arm64 into dist/
+# Using Bun
+bunx @mamdouh-aboammar/rem doctor
+
+# Using Node.js (npx)
+npx @mamdouh-aboammar/rem doctor
 ```
 
-`./rem demo` opens a recorded Cal AI investigation with no requests to source providers. Use `--no-open --port 0` to print a dynamically allocated loopback URL without launching a browser. Choose **Evidence only** in the browser to collect and view reports without a model.
+---
 
-To compare two snapshots:
+## 2. Automated Browser Extraction & SaaS Knowledge Base Workflow
+
+Explore any live web application or SaaS product safely and package its complete UX, data model, business rules, and build plan into a structured knowledge base on disk:
 
 ```sh
-./rem linear.app --only website,seo --no-ai --json
-./rem linear.app --only website,seo --no-ai --json
-./rem diff linear.app
+# 1. Initialize a new clean-room Knowledge Base (creates re-<product>/)
+rem kb init "Linear" --dir re-linear
+
+# 2. Automatically extract DOM inventory, tokens, PII masking & visual annotations
+rem extract https://linear.app --dir re-linear
+
+# 3. Validate KB structure, evidence tags, and sandbox ledger
+rem kb check re-linear
+rem kb check re-linear --closing  # Fails if any open or un-reconciled ledger rows remain
+
+# 4. Compile self-contained interactive HTML report
+rem kb report re-linear --out re-linear/REPORT.html
+
+# 5. Pack handoff bundle for downstream coding agents
+rem kb pack re-linear --out linear-handoff.zip
+
+# 6. Audit launch barriers and regulatory moats
+rem kb barriers re-linear
 ```
 
-`rem diff` also accepts two run IDs, two evidence files, or two report directories. An item absent from a later checked sample is described as *no longer seen in that sample*. It is not proof that an advertiser stopped running it.
+### Safety & Clean-Room Governance
 
-## Sources and coverage
+| Environment Level | Definition | Permissions |
+| :--- | :--- | :--- |
+| **L1 Dedicated** | Isolated trial/sandbox account in a separate profile | All safe sandbox writes (A0–A4) |
+| **L2 Workspace** | Dedicated sub-workspace under user account | A0–A3, A4 (workspace creation only) |
+| **L3 Container** | Designated sandbox container (e.g. `🧪 [RE] Sandbox`) | A0–A1, A2 (inside container only) |
+| **L4 Observe Only** | Production observation, no writes | A0 (read-only navigation & screenshots) |
 
-| Area | Evidence collected |
-| --- | --- |
-| Website and funnel | Homepage messaging, CTAs, pricing and trial signals, linked social accounts and apps, affiliate and team pages, logo candidates |
-| Tracking | Public page and bounded Google Tag Manager tag signatures, attribution and marketing stack |
-| SEO and AI search | Robots rules, `llms.txt`, nested and gzip sitemaps, URL families, locales, and update dates |
-| History | Wayback snapshot availability and sampled changes in homepage messaging |
-| App stores and launches | App Store metadata and ratings, Google Play public install bands, Apple EU Ad Repository, Hacker News |
-| Founders | Public website hints and matched Wikidata claims. Optional paid provider enrichment for LinkedIn and X |
-| Paid and social | With Scrape Creators, Meta, Google and LinkedIn ad samples, TikTok, Instagram, YouTube, X and LinkedIn, Reddit and Product Hunt |
+**The Write Gate:** Before every write action (A2, A3, A4):
+1. **Location:** Current breadcrumbs match `sandbox/environment.md`.
+2. **Audience:** Only the operator is assigned or notified. Real users are never reached.
+3. **Undo:** Explicit reversal path is verified.
+4. **Ledger:** Mutation is logged in `sandbox/ledger.csv`.
 
-Collectors label unavailable data as unknown and include manual-check links where possible. Tracking tags signal a possible channel. Ad samples and public install bands do not establish conversions, ROAS, spend, or causal impact.
+---
 
-`--only` accepts `website,seo,history,apps,paid,social,founders,community`. The website stage always runs when a public website is available. For store input the store lookup also runs first. Use `--handle tiktok=example` to override a discovered handle. Default exports go to `rem-reports/<run-id>`. Pass `--out` to choose a directory. If no observations are collected, the CLI exits nonzero and retains the run's source statuses and unknowns.
+## 3. DAG Task Ledger Validator (`.re-ledger/`)
 
-### Optional providers
-
-- `SCRAPECREATORS_API_KEY` (alias `SCRAPE_CREATORS_API_KEY`) enables paid-source collection. `--max-credits` caps dispatched requests per run (default 50, range 0 to 500). The JSON credit count reports request reservations, which includes failed dispatched requests. Provider billing can differ. Cached successful responses may be up to 24 hours old and do not use a request reservation. Set `REM_NO_CACHE=1` before a comparison that requires fresh paid-source observations.
-- `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` enables the Anthropic writer. `--engine claude-code` and `--engine codex` use the installed and authenticated CLI. `--model` can override the selected writer's model. `--no-ai` and CLI `--json` use the deterministic evidence writer.
-- Strategy writers receive the evidence needed to draft the report. A failed request or validation falls back to a saved evidence report and records a writer warning. Reports and provider data are local unless you choose an external writer. Configure credentials through your shell environment.
-
-History defaults to the operating system's user config directory under `reverse-engineer-marketing-go/runs`. Set `REM_HOME` or pass `--home` to use another location. The local web app listens on IPv4 loopback. It exposes history, run progress and cancellation, report and evidence downloads, and content review. Jobs are local to the running process. Completed runs persist across restarts.
-
-## Use with an MCP client
+REM validates `.re-ledger/TASKS.json` DAG dependencies, cycles, verification proofs, and concurrent write-path conflicts natively:
 
 ```sh
-./rem setup --dry-run
-codex mcp add reverse-engineer-marketing-go -- /absolute/path/to/rem mcp
+# Validate .re-ledger task DAG using the compiled Go engine
+rem ledger check
+
+# Or using the Python pre-commit helper
+python3 tools/rem.py check
 ```
 
-Use the binary's stable absolute path. The same stdio command works with other clients:
+---
 
+## 4. Public Marketing & GTM Intelligence
+
+Investigate how any company acquires customers, runs ads, and configures tracking:
+
+```sh
+# Investigate domain with stealth anti-bot headers and zero-cost public providers
+rem linear.app --keyless --stealth --window 30d
+
+# Compare two temporal snapshots
+rem diff linear.app
+
+# Run local web dashboard
+rem web --port 4321
+```
+
+---
+
+## 5. Model Context Protocol (MCP) Server
+
+Connect REM to your AI client (`claude_code`, `codex`, `antigravity`, `cursor`) via stdio:
+
+### Automatic Registration
+```sh
+rem setup --yes
+```
+
+### Manual Configuration
 ```json
-{"mcpServers":{"rem-go":{"command":"/absolute/path/to/rem","args":["mcp"]}}}
+{
+  "mcpServers": {
+    "rem": {
+      "command": "rem",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
-MCP offers investigation, evidence retrieval, content filtering, playbooks, report validation, report writing, and run comparison. Use `get_evidence` with `include_unknowns: true` to retrieve unresolved checks. The named prompts cover company investigation, comparison, monitoring, planning, and unknowns.
+### Catalog of 16 MCP Tools
 
-## Contribute
+| Tool | Category | Description |
+| :--- | :--- | :--- |
+| `kb_init` | SaaS RE | Scaffold a clean-room reverse-engineering knowledge base. |
+| `kb_extract` | Browser Driver | Automated headless extraction of DOM inventory, tokens, PII masking & annotations. |
+| `kb_check` | Quality Gate | Validate knowledge base IDs, evidence tags, and sandbox ledger. |
+| `kb_get_script` | Extraction | Retrieve browser extraction scripts (`inventory`, `tokens`, `mask`, `annotate`). |
+| `kb_build_report` | Reporting | Compile self-contained interactive `REPORT.html`. |
+| `kb_pack` | Handoff | Pack knowledge base into an agent-ready handoff ZIP archive. |
+| `kb_barriers` | SaaS RE | Structured audit of launch barriers and compliance moats. |
+| `ledger_check` | Governance | Validate `.re-ledger/` DAG tasks, cycle detection, and write path overlaps. |
+| `doctor` | Diagnostics | Inspect intelligence sources, engines, credentials, and drivers. |
+| `reverse_engineer_marketing` | Intelligence | Run stealth public marketing and GTM intelligence. |
+| `get_evidence` | Intelligence | Retrieve cited marketing evidence records and unknowns. |
+| `get_content` | Intelligence | Read collected ads, social posts, videos, and threads. |
+| `get_playbook` | Analysis | Read analysis playbooks and channel guides. |
+| `write_report` | Reporting | Render a saved run as a structured Markdown report. |
+| `compare_runs` | Intelligence | Compare temporal changes across two runs. |
+| `validate_report` | Quality Gate | Verify report claims against collected evidence. |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development and release checks, [CHANGELOG.md](CHANGELOG.md) for changes, and [SECURITY.md](SECURITY.md) for private security reporting.
+---
 
-## Verify
+## 6. Official Agent Skill (`skills/rem/`)
+
+The official REM Skill enables coding agents to autonomously run clean-room reverse engineering and software reconstruction following the [AgentSkills.io](https://skills.sh) open standard:
 
 ```sh
-go mod verify
-go vet ./...
-go test -race -count=1 -cover ./...
-go build -trimpath -o rem ./cmd/rem
-bash smoke.sh ./rem
+# Validate skill across 7 static analysis gates using omni-skill
+bunx @mamdouh-aboammar/omni-skill validate skills/rem
 ```
-
-For live verification use `REM_LIVE_TARGET=linear.app bash smoke.sh ./rem`. Direct outbound DNS and HTTPS are required by the public fetcher. Cross-compilation examples and platform checks are recorded in [the verification ledger](.re-ledger/VERIFICATION.md).
-
-This is a new Go implementation with an original browser interface. Compatibility is measured by the workflow and evidence contracts in [the parity matrix](.re-ledger/PARITY.md). API field shape and collection limits can differ from the TypeScript release. Paid API and authenticated strategy adapters have fixtures and require real credentials for live confirmation.
-
-The upstream project, embedded analyst playbooks, and recorded Cal AI demo are by Daniel Hangan (DansUGC), under MIT. See [LICENSE](LICENSE) and [the pinned reference](https://github.com/dansugc/reverse-engineer-marketing/tree/5b78198b2578997412853ab0858b10670fa74984).

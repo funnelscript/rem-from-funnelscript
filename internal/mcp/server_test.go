@@ -122,25 +122,41 @@ func TestMCPKBTools(t *testing.T) {
 	server := marketing{}
 
 	// 1. kb_init
-	initRes := toolCall(t, server, "kb_init", `{"product":"AcmeSaaS","dir":"`+tempDir+`"}`)
+	initArgs, err := json.Marshal(map[string]string{"product": "AcmeSaaS", "dir": tempDir})
+	if err != nil {
+		t.Fatalf("marshal initArgs failed: %v", err)
+	}
+	initRes := toolCall(t, server, "kb_init", string(initArgs))
 	if initRes.IsError || !strings.Contains(initRes.Content[0].Text, "Knowledge base initialized") {
 		t.Fatalf("kb_init tool failed: %#v", initRes)
 	}
 
 	// 2. kb_check
-	checkRes := toolCall(t, server, "kb_check", `{"dir":"`+tempDir+`"}`)
+	checkArgs, err := json.Marshal(map[string]string{"dir": tempDir})
+	if err != nil {
+		t.Fatalf("marshal checkArgs failed: %v", err)
+	}
+	checkRes := toolCall(t, server, "kb_check", string(checkArgs))
 	if checkRes.IsError || !strings.Contains(checkRes.Content[0].Text, `"valid": true`) {
 		t.Fatalf("kb_check tool failed: %#v", checkRes)
 	}
 
 	// 3. kb_get_script
-	scriptRes := toolCall(t, server, "kb_get_script", `{"name":"inventory"}`)
+	scriptArgs, err := json.Marshal(map[string]string{"name": "inventory"})
+	if err != nil {
+		t.Fatalf("marshal scriptArgs failed: %v", err)
+	}
+	scriptRes := toolCall(t, server, "kb_get_script", string(scriptArgs))
 	if scriptRes.IsError || !strings.Contains(scriptRes.Content[0].Text, "window.__rem") {
 		t.Fatalf("kb_get_script tool failed: %#v", scriptRes)
 	}
 
 	// 4. kb_build_report
-	reportRes := toolCall(t, server, "kb_build_report", `{"dir":"`+tempDir+`"}`)
+	reportArgs, err := json.Marshal(map[string]string{"dir": tempDir})
+	if err != nil {
+		t.Fatalf("marshal reportArgs failed: %v", err)
+	}
+	reportRes := toolCall(t, server, "kb_build_report", string(reportArgs))
 	if reportRes.IsError || !strings.Contains(reportRes.Content[0].Text, "Report compiled and saved") {
 		t.Fatalf("kb_build_report tool failed: %#v", reportRes)
 	}

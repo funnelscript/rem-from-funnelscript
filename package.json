@@ -8,8 +8,8 @@
   "main": "./bin/rem.js",
   "type": "module",
   "scripts": {
-    "build": "cd rem-from-funnelscript && make build && cd ..",
-    "test": "cd rem-from-funnelscript && go test ./... && cd .. && bun test",
+    "build": "make build",
+    "test": "go test ./...",
     "extract": "bun run tools/driver/extract.ts",
     "mcp": "./rem mcp",
     "doctor": "./rem doctor",
