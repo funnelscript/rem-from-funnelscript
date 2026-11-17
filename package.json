@@ -1,0 +1,37 @@
+{
+  "name": "@mamdouh-aboammar/rem",
+  "version": "1.0.0",
+  "description": "Unified Reverse Engineering & Clean-Room Software Reconstruction System",
+  "bin": {
+    "rem": "./bin/rem.js"
+  },
+  "main": "./bin/rem.js",
+  "type": "module",
+  "scripts": {
+    "build": "make build",
+    "test": "go test ./...",
+    "extract": "bun run tools/driver/extract.ts",
+    "mcp": "./rem mcp",
+    "doctor": "./rem doctor",
+    "setup": "./rem setup --yes"
+  },
+  "keywords": [
+    "reverse-engineering",
+    "clean-room",
+    "software-reconstruction",
+    "mcp-server",
+    "agent-skills",
+    "playwright",
+    "browser-extraction",
+    "saas"
+  ],
+  "author": "Mamdouh Aboammar",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.50.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.4"
+  }
+}

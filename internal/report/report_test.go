@@ -1,9 +1,10 @@
 package report
 
 import (
-	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"strings"
 	"testing"
+
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func TestEvidenceMarkdownAndUnknownChannel(t *testing.T) {

@@ -13,10 +13,23 @@ coverage.out
 coverage.html
 *.pprof
 
-# Investigation output directories & local reports
+# Node and Bun dependencies
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.turbo/
+
+# Investigation output directories, local extraction & reports
 /rem-reports/
 /runs/
 .rem-home/
+re-*/
+*-handoff.zip
+*.zip
+*.tar.gz
+*.evidence.json
 *.log
 
 # Sensitive environments, credentials and tokens
@@ -27,6 +40,8 @@ coverage.html
 *.key
 *.cert
 *.p12
+credentials.json
+auth.json
 
 # OS files
 .DS_Store

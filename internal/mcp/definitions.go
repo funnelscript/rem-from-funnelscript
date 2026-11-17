@@ -116,6 +116,85 @@ var tools = []toolDefinition{
 			"run_b":  stringField("ID of the later run when comparing explicit snapshots."),
 		}),
 	},
+	{
+		Name:        "kb_init",
+		Title:       "Initialize a SaaS reverse-engineering knowledge base",
+		Description: "Scaffold a clean-room reverse-engineering knowledge base from official REM templates.",
+		InputSchema: object(map[string]schema{
+			"product": stringField("Name of the product or system being studied."),
+			"dir":     stringField("Optional target directory path (defaults to re-<product-slug>)."),
+		}, "product"),
+	},
+	{
+		Name:        "kb_check",
+		Title:       "Validate reverse-engineering knowledge base",
+		Description: "Audit knowledge base for unique IDs, valid evidence tags, and reconciled sandbox ledger.",
+		InputSchema: object(map[string]schema{
+			"dir":     stringField("Directory of the knowledge base to validate."),
+			"closing": {"type": "boolean", "description": "Enforce strict closing conditions: fails if any open, fixture or human ledger rows remain."},
+		}, "dir"),
+	},
+	{
+		Name:        "kb_get_script",
+		Title:       "Get browser extraction JavaScript script",
+		Description: "Retrieve embedded browser extraction script: inventory, tokens, mask, or annotate.",
+		InputSchema: object(map[string]schema{
+			"name": stringEnum("Script name to retrieve.", []string{"inventory", "tokens", "mask", "annotate"}),
+		}, "name"),
+	},
+	{
+		Name:        "kb_build_report",
+		Title:       "Compile self-contained REPORT.html",
+		Description: "Compile the entire knowledge base into a self-contained, CSP-hardened interactive HTML report.",
+		InputSchema: object(map[string]schema{
+			"dir": stringField("Directory of the knowledge base."),
+			"out": stringField("Optional file path to write REPORT.html (defaults to <dir>/REPORT.html)."),
+		}, "dir"),
+	},
+	{
+		Name:        "kb_pack",
+		Title:       "Pack knowledge base for downstream coding agents",
+		Description: "Pack the reverse-engineering knowledge base into an agent-ready handoff ZIP bundle (excluding or including sandbox logs).",
+		InputSchema: object(map[string]schema{
+			"dir":  stringField("Directory of the knowledge base to pack."),
+			"out":  stringField("Optional output ZIP file path (defaults to <dir>.zip)."),
+			"full": {"type": "boolean", "description": "Include raw sandbox/log in the handoff bundle."},
+		}, "dir"),
+	},
+	{
+		Name:        "kb_barriers",
+		Title:       "Audit launch barriers and regulatory moats",
+		Description: "Parse and structured-audit launch barriers, compliance requirements, lead times, and mitigation plays from clone/barriers.md.",
+		InputSchema: object(map[string]schema{
+			"dir": stringField("Directory of the knowledge base."),
+		}, "dir"),
+	},
+	{
+		Name:        "kb_extract",
+		Title:       "Automated browser extraction driver",
+		Description: "Run the automated browser extraction driver against a target web URL, extracting DOM inventory, tokens, PII masking, and visual element annotations into a clean-room knowledge base.",
+		InputSchema: object(map[string]schema{
+			"url":      stringField("Target web application URL to extract."),
+			"dir":      stringField("Target knowledge base directory (defaults to re-<slug>)."),
+			"headless": {"type": "boolean", "description": "Run browser headlessly (default: true)."},
+			"mask_pii": {"type": "boolean", "description": "Apply two-tier DOM PII redaction and blur before screenshot (default: true)."},
+			"annotate": {"type": "boolean", "description": "Generate numbered visual annotations overlay (default: true)."},
+		}, "url"),
+	},
+	{
+		Name:        "ledger_check",
+		Title:       "Validate .re-ledger DAG tasks and dependencies",
+		Description: "Audit .re-ledger task DAG for topological sorting, cycle detection, evidence verification links, and concurrent write-path conflicts.",
+		InputSchema: object(map[string]schema{
+			"dir": stringField("Optional base directory containing .re-ledger or path to .re-ledger itself (defaults to current working directory)."),
+		}),
+	},
+	{
+		Name:        "doctor",
+		Title:       "System diagnostics and environment inspection",
+		Description: "Check available intelligence sources, paid API credentials, AI writing engines, and browser automation drivers.",
+		InputSchema: object(map[string]schema{}),
+	},
 }
 
 type promptArgument struct {
@@ -182,6 +261,33 @@ var prompts = []promptDefinition{
 		Arguments:   []promptArgument{{Name: "run_id", Description: "ID returned by reverse_engineer_marketing.", Required: true}},
 		render: func(args map[string]string) string {
 			return fmt.Sprintf("Call get_evidence with run_id %s and include_unknowns true. Explain why each gap exists, which claims it prevents, and how to check the most important gaps using available public sources or the recorded manualCheck links.", quoted(args["run_id"]))
+		},
+	},
+	{
+		Name:        "reverse_engineer_saas",
+		Title:       "Reverse engineer a SaaS product",
+		Description: "Complete clean-room reverse-engineering workflow: init KB, run browser extraction, document Given/When/Then rules, barriers, and compile REPORT.html.",
+		Arguments:   []promptArgument{urlArgument, {Name: "product", Description: "Name of the SaaS product (e.g. Linear, Notion, Figma).", Required: true}},
+		render: func(args map[string]string) string {
+			return fmt.Sprintf("Execute the complete REM SaaS reverse engineering workflow for %s (%s). 1. Call kb_init with product %s. 2. Use kb_extract with url %s to extract DOM inventory, tokens, PII masking, and annotations. 3. Document business rules, entities, and launch barriers. 4. Call kb_check to validate evidence tags and sandbox ledger. 5. Call kb_build_report to compile interactive REPORT.html.", quoted(args["product"]), quoted(args["url"]), quoted(args["product"]), quoted(args["url"]))
+		},
+	},
+	{
+		Name:        "audit_launch_barriers",
+		Title:       "Audit launch barriers and regulatory moats",
+		Description: "Evaluate regulatory, security, data residency, and enterprise barriers from clone/barriers.md.",
+		Arguments:   []promptArgument{{Name: "dir", Description: "Directory of the knowledge base.", Required: true}},
+		render: func(args map[string]string) string {
+			return fmt.Sprintf("Call kb_barriers for directory %s. Analyze the parsed barriers by category, severity, lead time, and cost. Propose day-1 MVP mitigations and compliance strategies for independent reconstruction.", quoted(args["dir"]))
+		},
+	},
+	{
+		Name:        "clean_room_reconstruct",
+		Title:       "Clean-room software reconstruction",
+		Description: "Rebuild the documented software independently under strict L1-L4 environment governance and DAG ledgers.",
+		Arguments:   []promptArgument{{Name: "dir", Description: "Directory of the knowledge base.", Required: true}},
+		render: func(args map[string]string) string {
+			return fmt.Sprintf("Review the reverse-engineered knowledge base at %s. 1. Call kb_check with closing=true to ensure all ledger rows are reconciled. 2. Call kb_pack to generate the coding-agent handoff bundle. 3. Set up .re-ledger/ with tasks, checks, and write paths. 4. Verify DAG integrity using ledger_check before implementation.", quoted(args["dir"]))
 		},
 	},
 }

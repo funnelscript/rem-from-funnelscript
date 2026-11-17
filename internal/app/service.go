@@ -48,11 +48,16 @@ func env(keys ...string) string {
 func (s *Service) Doctor() map[string]any {
 	_, claudeErr := exec.LookPath("claude")
 	_, codexErr := exec.LookPath("codex")
+	_, bunErr := exec.LookPath("bun")
+	_, nodeErr := exec.LookPath("node")
+	_, playwrightErr := exec.LookPath("playwright")
+	_, pythonErr := exec.LookPath("python3")
 	return map[string]any{
 		"areas":          Areas,
 		"version":        model.Version,
 		"scrapeCreators": env("SCRAPECREATORS_API_KEY", "SCRAPE_CREATORS_API_KEY") != "",
 		"engines":        map[string]bool{"evidence": true, "anthropic": env("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN") != "", "claude-code": claudeErr == nil, "codex": codexErr == nil},
+		"drivers":        map[string]bool{"bun": bunErr == nil, "node": nodeErr == nil, "playwright": playwrightErr == nil, "python3": pythonErr == nil},
 		"freeSources":    []string{"website", "tracking", "seo", "wayback", "appstore", "apple_ads", "hackernews", "reddit_public", "github_public", "founders", "careers_hiring", "creative_angles", "entrepreneur_grievances"},
 		"stealth":        env("REM_STEALTH") == "1",
 		"keyless":        env("REM_KEYLESS") == "1",

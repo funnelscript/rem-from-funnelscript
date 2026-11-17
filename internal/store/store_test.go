@@ -1,9 +1,10 @@
 package store
 
 import (
-	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 	"sync"
 	"testing"
+
+	"github.com/funnelscript/rem-from-funnelscript/internal/model"
 )
 
 func TestConcurrentRunHistoryAndIndependentOutput(t *testing.T) {
