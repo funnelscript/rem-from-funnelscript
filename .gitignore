@@ -7,11 +7,27 @@
 *.dylib
 *.test
 /dist/
+bin/rem
 
 # Test artifacts and performance profiles
 coverage.out
 coverage.html
 *.pprof
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Python artifacts and virtual environments
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.venv/
+venv/
+env/
+ENV/
 
 # Node and Bun dependencies
 node_modules/
@@ -20,6 +36,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .turbo/
+bun.lockb
 
 # Investigation output directories, local extraction & reports
 /rem-reports/
@@ -32,16 +49,28 @@ re-*/
 *.evidence.json
 *.log
 
-# Sensitive environments, credentials and tokens
+# Sensitive environments, credentials and tokens (Zero-Leak)
 .env
 .env.*
 !.env.example
+*.local
+*.local.*
 *.pem
 *.key
 *.cert
 *.p12
 credentials.json
 auth.json
+service-account*.json
+token*.json
+agent-kernel/env-vault/
+.agent-kernel/
+.antigravity/
+
+# Gate 0, Agent Swarms, and Worktree isolation
+*worktrees/
+*.wave.*
+coordinator.*/
 
 # OS files
 .DS_Store

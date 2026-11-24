@@ -239,9 +239,9 @@ func Check(kbDir string, closing bool) (*CheckResult, error) {
 
 	// 2. Scan and index all files
 	files := make([]string, 0)
-	_ = filepath.WalkDir(absDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
+	_ = filepath.WalkDir(absDir, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil //nolint:nilerr // ignore unreadable entries and continue walking
 		}
 		rel, _ := filepath.Rel(absDir, path)
 		if d.IsDir() {
@@ -434,11 +434,9 @@ func validateMarkdownContent(absDir, rel string, result *CheckResult) {
 	if rel == "clone/barriers.md" {
 		lines := strings.Split(cleaned, "\n")
 		for _, line := range lines {
-			if strings.HasPrefix(line, "### BR-") {
-				if !tagPattern.MatchString(line) {
-					// Check nearby lines
-					// Just record stat
-				}
+			if strings.HasPrefix(line, "### BR-") && !tagPattern.MatchString(line) {
+				// Barrier headings may include citations on body lines; no warning required
+				continue
 			}
 		}
 	}
