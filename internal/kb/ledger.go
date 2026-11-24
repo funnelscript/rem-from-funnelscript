@@ -111,10 +111,10 @@ func CheckLedger(baseDir string) (*LedgerResult, error) {
 	}
 	if err := json.Unmarshal(tasksData, &envelope); err == nil && envelope.Version > 0 {
 		tasks = envelope.Tasks
-	} else if err := json.Unmarshal(tasksData, &tasks); err != nil {
+	} else if parseErr := json.Unmarshal(tasksData, &tasks); parseErr != nil {
 		result.Errors = append(result.Errors, "TASKS.json must have version 1 and a tasks array (or array of tasks)")
 		result.Valid = false
-		return result, nil
+		return result, nil //nolint:nilerr // structural parse error captured in result.Errors
 	}
 
 	result.TaskCount = len(tasks)
@@ -155,16 +155,12 @@ func CheckLedger(baseDir string) (*LedgerResult, error) {
 			}
 		}
 
-		cleanPaths := []string{}
 		for _, p := range t.WritePaths {
 			parts := cleanPathParts(p)
 			if len(parts) == 0 {
 				result.Errors = append(result.Errors, fmt.Sprintf("%s: write_paths must contain valid project-relative paths (got %q)", id, p))
-			} else {
-				cleanPaths = append(cleanPaths, p)
-				if t.Status == "ready" || t.Status == "in_progress" {
-					activePaths = append(activePaths, activePath{taskID: id, parts: parts})
-				}
+			} else if t.Status == "ready" || t.Status == "in_progress" {
+				activePaths = append(activePaths, activePath{taskID: id, parts: parts})
 			}
 		}
 

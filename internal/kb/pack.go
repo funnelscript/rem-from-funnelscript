@@ -66,9 +66,9 @@ func Pack(kbDir, outZip string, full bool) (string, error) {
 
 		// Security Check: prevent symlink path traversal
 		if info.Mode()&os.ModeSymlink != 0 {
-			resolved, err := filepath.EvalSymlinks(path)
-			if err != nil || !strings.HasPrefix(resolved, absDir) {
-				return nil // Skip unsafe symlinks
+			resolved, evalErr := filepath.EvalSymlinks(path)
+			if evalErr != nil || !strings.HasPrefix(resolved, absDir) {
+				return nil //nolint:nilerr // skip unsafe or unresolvable symlinks
 			}
 		}
 
